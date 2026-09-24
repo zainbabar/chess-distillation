@@ -19,7 +19,7 @@ The teacher is [gpt-oss-120b](https://huggingface.co/openai/gpt-oss-120b), serve
 
 \*Elo fitted to which rated puzzles were solved. 95% intervals are roughly ±60 on 500 puzzles and ±130 on 140.
 
-**2. Thinking harder has sharply diminishing returns.** Medium effort (one attempt) solves 49% of 504 fresh puzzles, at ~8× the tokens of low effort. High effort mostly spends its budget checking squares one by one and often runs out: 7 of 10 answers were cut off at 32k tokens. Retrying is cheaper than thinking longer: low effort's best-of-2 reaches 56%.
+**2. Thinking harder has sharply diminishing returns.** Medium effort (one attempt) solves 49% of 504 fresh puzzles, at ~8× the tokens of low effort. High effort mostly spends its budget checking squares one by one and often runs out: given up to 60k tokens on 20 puzzles medium had missed, it solved 10 but ran out of budget on 7. Retrying is cheaper than thinking longer: low effort's best-of-2 reaches 56%.
 
 **3. Stockfish never rescued a "wrong" answer.** Of 567 wrong answers, none was an equally good alternative move; 556 were outright blunders.
 
