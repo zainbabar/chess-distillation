@@ -1,0 +1,35 @@
+# Python environment and caches (rebuild with: python3 -m venv .venv && .venv/bin/pip install chess openai)
+.venv/
+__pycache__/
+*.pyc
+
+# Lichess puzzle database (1.4 GB; re-download from https://database.lichess.org/#puzzles)
+data/
+
+# Raw model outputs, run logs and reports: large and regenerable by re-running the pipeline.
+# Back up results/*.jsonl separately (possible training data) — never delete them.
+# Run scripts (results/*.sh) are still tracked.
+results/*.jsonl
+results/*.log
+results/*.md
+
+# Puzzle sets: regenerable with build_pilot_set.py / make_subset.py / build_pool.py (fixed seeds)
+*.jsonl
+# ...except the held-out TEST SET: a rebuild from a newer Lichess download would differ
+!pilot_set.jsonl
+
+# Working docs (kept locally, not in the repo)
+CLAUDE.md
+WALKTHROUGH.md
+PROJECT_GUIDE.md
+NOTES.md
+
+# Claude Code local state
+.claude/scheduled_tasks.lock
+.claude/settings.local.json
+
+# Editors / OS
+.DS_Store
+*.swp
+.vscode/
+.idea/
