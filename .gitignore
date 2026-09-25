@@ -11,7 +11,14 @@ data/
 # Run scripts (results/*.sh) are still tracked.
 results/*.jsonl
 results/*.log
+results/*.log.*
 results/*.md
+results/*.json
+# per-run result folders (training data, eval outputs, reports: results/sft/, results/night2/, results/collect1/ ...)
+results/*/
+
+# Trained student checkpoints (LoRA adapters / full models, GBs; regenerable with train_sft.py)
+ckpt/
 
 # Puzzle sets: regenerable with build_pilot_set.py / make_subset.py / build_pool.py (fixed seeds)
 *.jsonl
