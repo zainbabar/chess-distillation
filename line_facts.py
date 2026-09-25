@@ -207,8 +207,9 @@ def move_sentence(f):
     return s + (": " + "; ".join(bits) if bits else "")
 
 
-def facts_text(fen, uci_moves, themes=None, with_start=True):
-    """Readable FACTS block for prompts."""
+def facts_text(fen, uci_moves, themes=None, with_start=True, v2=False):
+    """Readable FACTS block for prompts. v2 (2026-09-25): + attackers/defenders of every attacked piece, the number of
+    legal replies after each move, and the material won/lost in words (targets the claims writers invent)."""
     board = chess.Board(fen)
     hero = SIDE[board.turn]
     lines = []
@@ -226,13 +227,29 @@ def facts_text(fen, uci_moves, themes=None, with_start=True):
             lines.append("- Undefended opponent pieces that " + hero + " attacks: " + ", ".join(s["hanging"]) + ".")
         if s["threatened"]:
             lines.append(f"- {hero}'s pieces under attack: " + ", ".join(s["threatened"]) + ".")
+    if with_start and v2:
+        safety = []
+        for color in (board.turn, not board.turn):
+            for sq in chess.SquareSet(board.occupied_co[color] & ~board.kings):
+                att = board.attackers(not color, sq)
+                if att:
+                    dfn = board.attackers(color, sq)
+                    safety.append(f"{desc(board, sq)}: attacked by " + ", ".join(desc(board, a) for a in att) +
+                                  ("; defended by " + ", ".join(desc(board, d) for d in dfn) if dfn else "; NOT defended"))
+        lines.append("- Attacked pieces (every attacker and defender): " + ("; ".join(safety) if safety else "none") + ".")
+        lines.append("- Any piece not listed there is not attacked. There are no pins other than those listed above.")
     facts, end_board = facts_for_line(fen, uci_moves)
     lines.append("- The solution line, move by move:")
     for f in facts:
         if "illegal" in f:
             lines.append(f"  * (move {f['illegal']} is illegal here)")
             break
-        lines.append("  * " + move_sentence(f))
+        s = "  * " + move_sentence(f)
+        if v2 and not f.get("checkmate"):
+            n = f.get("n_replies")
+            other = "Black" if f["side"] == "White" else "White"
+            s += f" [{other} then has {n} legal move{'s' if n != 1 else ''}]"
+        lines.append(s)
     last = facts[-1] if facts else {}
     if last.get("checkmate"):
         lines.append(f"- Result: {hero} checkmates.")
@@ -240,6 +257,13 @@ def facts_text(fen, uci_moves, themes=None, with_start=True):
         bal = last["balance_after"]
         lines.append(f"- Result: material change over the line for {hero}: {bal:+d} "
                      f"({'wins material' if bal > 0 else 'loses material' if bal < 0 else 'material level'}).")
+    if v2 and facts and "illegal" not in facts[-1]:
+        caps = {"White": [], "Black": []}
+        for f in facts:
+            if f.get("captures"):
+                caps[f["side"]].append(f["captures"]["piece"])
+        lines.append("- Captures over the line: White takes " + (", ".join(caps["White"]) or "nothing") +
+                     "; Black takes " + (", ".join(caps["Black"]) or "nothing") + ".")
     if themes:
         words = [THEME_WORDS[t] for t in themes if t in THEME_WORDS]
         if words:

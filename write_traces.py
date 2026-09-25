@@ -41,6 +41,23 @@ FD_INSTRUCTIONS = (
 )
 FACTS_RULE = (" Every claim about captures, checks, threats, pins, forks, material and mate must agree "
               "with the FACTS above.")
+# FDF2 (2026-09-25): stricter rules aimed at the claims writers invented most (defended/hanging pieces, "only reply",
+# "double check", squares a piece "controls"), shorter text, and the v2 FACTS block (attackers/defenders, reply counts).
+FDF2_INSTRUCTIONS = (
+    "Write the reasoning a strong chess player would go through to FIND this solution over the board, as if you did "
+    "not know it yet: notice what stands out, consider the forcing moves, calculate the solution line, and arrive at "
+    "the move. Use 3 to 7 sentences. Accuracy rules: (1) every fact you state about the position or a move (captures, "
+    "checks, threats, what attacks or defends what, material, mate) must be in the FACTS; (2) use the words pin, "
+    "fork, skewer, discovered, double check, hanging, trapped, overloaded, sacrifice, forced, only move or only reply "
+    "only when the FACTS support them (\"forced\" or \"only\" only when the FACTS say there is 1 legal move); "
+    "(3) do not describe which squares a piece controls or covers; (4) mention only pieces, squares and moves that "
+    "appear on the board or in the FACTS. Refer to pieces with their squares (e.g. \"the queen on h5\") and give moves "
+    "in standard notation. Never mention an engine, a computer, evaluations, ratings, themes, a database, or that you "
+    "were given the solution.\n"
+    "Then end with two lines exactly of the form:\n"
+    "FINAL_LINE: <the solution line as UCI moves separated by spaces>\n"
+    "FINAL_MOVE: <the first move in UCI>"
+)
 
 
 def build_prompt(p, variant):
@@ -55,6 +72,9 @@ def build_prompt(p, variant):
              f"The solution (verified correct): {' '.join(sol_san)}  [UCI: {' '.join(p['full_solution'])}]", ""]
     if variant in ("FDF", "FDFT"):
         lines += [facts_text(p["fen"], p["full_solution"], p.get("themes")), ""]
+    if variant == "FDF2":
+        lines += [facts_text(p["fen"], p["full_solution"], p.get("themes"), v2=True), "", FDF2_INSTRUCTIONS]
+        return "\n".join(lines)
     alt = tempting_alternative(p) if variant == "FDFT" else None
     if alt:
         b2, alt_san = board.copy(), []
@@ -127,7 +147,7 @@ async def write_one(client, sem, args, p, out_f, lock, prog):
 async def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--run", required=True)
-    ap.add_argument("--variant", required=True, choices=["FD", "FDF", "FDFT"])
+    ap.add_argument("--variant", required=True, choices=["FD", "FDF", "FDFT", "FDF2"])
     ap.add_argument("--analysis", default=None, help="engine_analysis.py output (FDFT)")
     ap.add_argument("--puzzles", required=True)
     ap.add_argument("--effort", default="low", choices=["low", "medium", "high"])

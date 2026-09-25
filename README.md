@@ -1,27 +1,32 @@
 # Chess distillation
 
-> **Work in progress.** Teacher evaluation, data-collection experiments and first student pilots are done; the
-> main experiment (imitation of teacher reasoning vs answers-only, before and after RL) is next.
+> Work in progress. Teacher evaluation, data-collection experiments and the first student pilots are done. The main
+> experiment is next: students that imitate the teacher's reasoning versus students trained on answers only, compared
+> before and after RL.
 
-**Question:** can a small language model (1–3B parameters), trained on a single desktop GPU, beat a 120B model at
-chess tactics — and does learning the big model's *reasoning* help it, either directly or after reinforcement learning?
+Can a small language model (1 to 3B parameters), trained on a single desktop GPU, beat a 120B model at chess tactics?
+And does learning the big model's reasoning help it, either directly or after reinforcement learning?
 
 The teacher is [gpt-oss-120b](https://huggingface.co/openai/gpt-oss-120b), served locally with vLLM on an NVIDIA
-DGX Spark. Everything is checked automatically: [python-chess](https://python-chess.readthedocs.io/) for the rules,
-[Stockfish](https://stockfishchess.org/) for move quality. Puzzles come from the
-[Lichess puzzle database](https://database.lichess.org/#puzzles); 500 rating-stratified puzzles (800–2200) are a
-held-out test set.
+DGX Spark. Everything is checked automatically, with [python-chess](https://python-chess.readthedocs.io/) for the rules
+and [Stockfish](https://stockfishchess.org/) for move quality. Puzzles come from the
+[Lichess puzzle database](https://database.lichess.org/#puzzles), and 500 rating-stratified puzzles (rated 800 to 2200)
+are held out as the test set.
 
 ## Findings so far
 
-**1. The teacher's main weakness is perception.** Given only the position (FEN), gpt-oss-120b plays an illegal
-move 22% of the time. A python-chess description of the board (diagram, pieces, legal moves) removes illegal moves
-and raises its score; with it, the teacher solves **44.4% of the 500 test puzzles (puzzle rating 1416)** in one
-low-effort attempt. Thinking harder has diminishing returns (medium ≈ 49% on a fresh pool; high effort often runs
-out of budget); retrying helps more.
+### 1. The teacher's main weakness is perception
 
-**2. A small student already beats the teacher — with answers only.** Qwen3-1.7B (LoRA) trained on Lichess puzzles
-with just the move and its line, no reasoning text, using the same board description in the prompt:
+Given only the position (FEN), gpt-oss-120b plays an illegal move 22% of the time. Adding a python-chess description of
+the board (a diagram, the pieces and the legal moves) removes the illegal moves and raises its score. With it, the
+teacher solves 44.4% of the 500 test puzzles (puzzle rating 1416) in one low-effort attempt. Thinking harder has
+diminishing returns: medium effort scores about 49% on a fresh pool, and high effort often runs out of budget. Retrying
+helps more.
+
+### 2. A small student already beats the teacher with answers only
+
+We trained Qwen3-1.7B (LoRA) on Lichess puzzles with just the move and its line, no reasoning text, and gave it the same
+board description in its prompt:
 
 | Student training data (same prompt, same 500 test puzzles) | Solved | Puzzle rating |
 |---|---|---|
@@ -30,24 +35,30 @@ with just the move and its line, no reasoning text, using the same board descrip
 | answers only, 5.6k puzzles | 49.6% | 1491 |
 | **answers only, 21.6k puzzles** | **51.2%** | **1514** (beats the teacher, paired p = 0.011) |
 
-**3. Imitating the teacher's reasoning made students worse at these sizes.** Following the recipe of
-[Master Distillation](https://arxiv.org/abs/2603.20510), the teacher writes an explanation "as if discovering" the
-engine's best line; we add machine-checked facts to its prompt and filter out explanations with false claims.
-Trained on those explanations, the student solved **43.4%** vs 49.6% for answers-only on the same 5.6k puzzles
-(p = 0.008). The student copies the confident style but can't follow the board: most of its own explanations
-contain an illegal or impossible move, even when its answer is right. Explanations built by code, and
-board-tracking practice, didn't raise accuracy either (board-tracking practice does make its lines more legal).
+### 3. Imitating the teacher's reasoning made students worse at these sizes
 
-**4. LLM judges can't grade chess explanations reliably** (even given the facts, ~55% agreement with careful
-human-style ratings); preventing errors (facts in the writer's prompt) worked better than detecting them.
+We followed the recipe of [Master Distillation](https://arxiv.org/abs/2603.20510), where the teacher writes an
+explanation "as if discovering" the engine's best line. We added machine-checked facts to the teacher's prompt and
+filtered out explanations with false claims. A student trained on those explanations solved 43.4%, against 49.6% for
+answers only on the same 5.6k puzzles (p = 0.008). It copies the teacher's confident style but can't follow the board:
+most of its own explanations contain an illegal or impossible move, even when its answer is right. Explanations built
+by code and board-tracking practice didn't raise accuracy either, though board-tracking practice does make the
+student's lines legal more often.
 
-## Next (the main experiment)
+### 4. LLM judges can't grade chess explanations reliably
 
-1. ~40k fact-grounded teacher explanations (the paper's scale) + answers-only data for the same puzzles.
-2. Two students trained the same way (full fine-tune): **answers-only** vs **teacher explanations**.
-3. The same RL (reward = correct move) on both. Does the reasoning-trained student overtake after practice?
-4. Measure accuracy *and* whether the students' reasoning is real (true claims, legal lines).
-5. A stronger baseline: the teacher at medium effort on the test set.
+Even when given the facts, an LLM judge agreed with careful human-style ratings only about 55% of the time. Preventing
+errors by putting facts in the writer's prompt worked better than trying to catch them afterwards.
+
+## Next: the main experiment
+
+1. Collect about 40k fact-grounded teacher explanations (the paper's scale), plus answers-only data for the same
+   puzzles.
+2. Train two students the same way (full fine-tune), one on answers only and one on the teacher's explanations.
+3. Give both the same RL, with the correct move as the reward, and see whether the reasoning-trained student overtakes
+   the other after practice.
+4. Measure accuracy, and also whether the students' reasoning is real (true claims, legal lines).
+5. Add a stronger baseline: the teacher at medium effort on the test set.
 
 ## How it works
 
@@ -64,16 +75,16 @@ students (Qwen3-1.7B) ─► imitation (SFT) ─► RL with a verifiable reward 
 
 | File | What it does |
 |---|---|
-| `build_pilot_set.py`, `build_pool.py`, `build_collect_pool.py`, `make_subset.py` | Puzzle sets (test set, theme/rating-balanced training pools; test puzzles excluded by id and position) |
+| `build_pilot_set.py`, `build_pool.py`, `build_collect_pool.py`, `make_subset.py` | Puzzle sets: the test set, and theme- and rating-balanced training pools (test puzzles excluded by id and by position) |
 | `perception.py` | Board description for prompts (diagram, pieces, legal moves; optional tactics) |
-| `run_pilot.py` | Teacher runner: prompt formats, effort, grading, resumable |
-| `line_facts.py`, `claim_check.py` | Machine-computed facts about a line; tool-based checker of claims in a text |
+| `run_pilot.py` | Runs the teacher with a chosen prompt format and effort, grades the answers, resumes where it stopped |
+| `line_facts.py`, `claim_check.py` | Machine-computed facts about a line; a tool-based checker for the claims in a text |
 | `write_traces.py`, `package_sft.py` | Teacher explanations ("as if discovering" + facts) and filtering into training data |
 | `code_trace.py`, `aux_tasks.py`, `make_answer_data.py` | Code-built explanations, board-tracking tasks, answers-only data |
-| `train_sft.py`, `eval_student.py`, `rl_grpo.py` | Student training (LoRA/full), evaluation, RL (draft) |
-| `engine_analysis.py`, `verify_trace.py`, `judge.py`, `judge_eval.py` | Stockfish analysis, step verification, LLM judge and its calibration |
-| `puzzle_rating.py`, `analyze_pilot.py`, `night2_summary.py` | Puzzle rating with CIs, paired comparisons, reports |
-| `pilot_set.jsonl` | The held-out 500-puzzle **test set** |
+| `train_sft.py`, `eval_student.py`, `rl_grpo.py` | Student training (LoRA or full), evaluation, RL (draft) |
+| `engine_analysis.py`, `verify_trace.py`, `judge.py`, `judge_eval.py` | Stockfish analysis, step verification, the LLM judge and its calibration |
+| `puzzle_rating.py`, `analyze_pilot.py`, `night2_summary.py` | Puzzle ratings with confidence intervals, paired comparisons, reports |
+| `pilot_set.jsonl` | The held-out 500-puzzle test set |
 
 ## Reproducing
 
@@ -85,6 +96,6 @@ curl -LO https://database.lichess.org/lichess_db_puzzle.csv.zst && mkdir -p data
 .venv/bin/python run_pilot.py --run test500 --formats P1L --puzzles pilot_set.jsonl --effort low
 ```
 
-Serving notes for the DGX Spark (GB10, 128 GB unified memory): NVIDIA's `nvcr.io/nvidia/vllm:26.05-py3` image
-(vLLM 0.20.1), the Marlin MoE backend, `--gpu-memory-utilization 0.70`. Student training runs in the same image
-with `peft` added.
+On the DGX Spark (GB10, 128 GB unified memory) we serve the teacher with NVIDIA's `nvcr.io/nvidia/vllm:26.05-py3`
+image (vLLM 0.20.1), the Marlin MoE backend and `--gpu-memory-utilization 0.70`. Student training runs in the same
+image with `peft` added.
