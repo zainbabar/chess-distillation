@@ -2,6 +2,7 @@
 .venv/
 __pycache__/
 *.pyc
+.pytest_cache/
 
 # Lichess puzzle database (1.4 GB; re-download from https://database.lichess.org/#puzzles)
 data/
@@ -14,6 +15,7 @@ results/*.log
 results/*.log.*
 results/*.md
 results/*.json
+results/*.minmem
 # per-run result folders (training data, eval outputs, reports: results/sft/, results/night2/, results/collect1/ ...)
 results/*/
 
@@ -27,8 +29,9 @@ ckpt/
 
 # Working docs (kept locally, not in the repo)
 CLAUDE.md
-WALKTHROUGH.md
-PROJECT_GUIDE.md
+AGENT_LOG.md
+RESEARCH_DIRECTION.md
+ROADMAP.md
 NOTES.md
 
 # Claude Code local state

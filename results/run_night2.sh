@@ -12,6 +12,7 @@
 # Launch: (nohup results/run_night2.sh >> results/night2.log 2>&1 &)     (mem_guard running, nothing else on the GPU)
 # Options: N=8000  EPOCHS=2  SKIP_BASELINE=1
 cd ~/chess-distillation
+export PYTHONPATH=src  # shared modules live in src/
 PY=.venv/bin/python
 ts() { date '+%F %T'; }
 N=${N:-8000}
@@ -28,16 +29,16 @@ if [ ! -f ckpt/${RUN}_llm/adapter_model.safetensors ]; then
     until curl -sf localhost:8000/v1/models >/dev/null; do sleep 10; done; }
   if [ "${SKIP_BASELINE:-0}" != "1" ]; then
     echo "$(ts) A: teacher baseline, P1L low, 500 test puzzles"
-    $PY -u run_pilot.py --run test500 --formats P1L --puzzles pilot_set.jsonl --effort low --max-tokens 8192 \
+    $PY -u src/run_pilot.py --run test500 --formats P1L --puzzles pilot_set.jsonl --effort low --max-tokens 8192 \
         --concurrency 32 || echo "$(ts) A FAILED"
   fi
   head -n $N pool_collect1.jsonl > results/$RUN/pool.jsonl
   echo "$(ts) B: FDF-low traces for $N puzzles"
-  $PY -u write_traces.py --run $RUN --variant FDF --puzzles results/$RUN/pool.jsonl --effort low \
+  $PY -u src/write_traces.py --run $RUN --variant FDF --puzzles results/$RUN/pool.jsonl --effort low \
       --concurrency 48 --max-tokens 4096 || echo "$(ts) B FAILED"
-  $PY -u write_traces.py --run $RUN --variant FDF --puzzles results/$RUN/pool.jsonl --effort low \
+  $PY -u src/write_traces.py --run $RUN --variant FDF --puzzles results/$RUN/pool.jsonl --effort low \
       --concurrency 48 --max-tokens 4096 || true   # second pass retries any errors
-  $PY package_sft.py --traces results/traces_${RUN}_FDF.jsonl --puzzles results/$RUN/pool.jsonl \
+  $PY src/package_sft.py --traces results/traces_${RUN}_FDF.jsonl --puzzles results/$RUN/pool.jsonl \
       --out results/$RUN/sft_fdf.jsonl
 fi
 

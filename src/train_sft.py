@@ -6,6 +6,9 @@ Runs inside the `trainenv` container (vLLM image + peft):
 Data: jsonl with "prompt" (the user message, same as the eval prompt) and "target" (the assistant reply).
 Loss only on the target tokens. The prompt is rendered with the model's chat template in non-thinking mode,
 exactly as vLLM renders it at evaluation time (enable_thinking=False).
+--full keeps fp32 master weights and runs the forward/backward under bf16 autocast (pure-bf16 weights would round
+away most AdamW updates at lr 1e-5); the saved model is cast to bf16. --save-epochs also saves <out>/epoch<N>
+after each full pass except the last.
 """
 import argparse
 import json
@@ -45,6 +48,18 @@ def target_loss(model, ids, att, lab):
     return torch.nn.functional.cross_entropy(logits, tgt[mask])
 
 
+def save(model, tok, out, full):
+    """Save the adapter (LoRA) or the whole model; a full model is written in bf16 (training keeps fp32)."""
+    os.makedirs(out, exist_ok=True)
+    if full:
+        model.save_pretrained(out, state_dict={k: v.to(torch.bfloat16) for k, v in model.state_dict().items()})
+        model.config.dtype = torch.bfloat16
+        model.config.save_pretrained(out)
+    else:
+        model.save_pretrained(out)
+    tok.save_pretrained(out)
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--data", required=True)
@@ -61,6 +76,7 @@ def main():
     ap.add_argument("--attn", default="flash_attention_2", help="flash_attention_2 | sdpa | eager")
     ap.add_argument("--max-steps", type=int, default=None, help="stop early (speed tests)")
     ap.add_argument("--no-grad-ckpt", action="store_true", help="faster, more memory (only with the teacher stopped)")
+    ap.add_argument("--save-epochs", action="store_true", help="also save <out>/epoch<N> after each pass but the last")
     args = ap.parse_args()
     lr = args.lr or (1e-5 if args.full else 2e-4)
     random.seed(args.seed)
@@ -78,8 +94,8 @@ def main():
     n_tgt = sum(sum(1 for x in d[1] if x != -100) for d in data)
     print(f"{len(data)} examples, {n_tok:,} tokens ({n_tgt:,} target tokens), lr {lr}", flush=True)
 
-    model = AutoModelForCausalLM.from_pretrained(args.model, dtype=torch.bfloat16, device_map={"": 0},
-                                                 attn_implementation=args.attn)
+    model = AutoModelForCausalLM.from_pretrained(args.model, dtype=torch.float32 if args.full else torch.bfloat16,
+                                                 device_map={"": 0}, attn_implementation=args.attn)
     if not args.no_grad_ckpt:
         model.gradient_checkpointing_enable()
     model.config.use_cache = False
@@ -132,7 +148,8 @@ def main():
                 ids[j, :len(a)] = torch.tensor(a)
                 lab[j, :len(b)] = torch.tensor(b)
                 att[j, :len(a)] = 1
-            loss = target_loss(model, ids.cuda(), att.cuda(), lab.cuda())
+            with torch.autocast("cuda", dtype=torch.bfloat16, enabled=args.full):
+                loss = target_loss(model, ids.cuda(), att.cuda(), lab.cuda())
             (loss / args.accum).backward()
             losses.append(loss.item())
             seen += int(att.sum())
@@ -150,9 +167,10 @@ def main():
                 if step >= total_steps:
                     break
         ep += 1
-    os.makedirs(args.out, exist_ok=True)
-    model.save_pretrained(args.out)
-    tok.save_pretrained(args.out)
+        if args.save_epochs and step < total_steps:
+            save(model, tok, os.path.join(args.out, f"epoch{ep}"), args.full)
+            print(f"saved {args.out}/epoch{ep} at step {step}", flush=True)
+    save(model, tok, args.out, args.full)
     json.dump({**vars(args), "lr": lr, "examples": len(data), "tokens": n_tok, "target_tokens": n_tgt,
                "minutes": round((time.time() - t0) / 60, 1), "final_loss": sum(losses[-40:]) / len(losses[-40:])},
               open(os.path.join(args.out, "train_meta.json"), "w"), indent=1)

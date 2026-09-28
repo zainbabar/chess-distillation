@@ -1,0 +1,5 @@
+# Teacher runs, grading, analysis, figures and tests (Python 3.12). Stockfish 16 is also needed for the engine checks.
+chess==1.11.2
+openai==3.19.1
+matplotlib==3.11.2
+pytest==9.1.1

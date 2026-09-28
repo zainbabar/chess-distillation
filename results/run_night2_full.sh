@@ -2,12 +2,13 @@
 # Night 2, full (launched 2026-09-25 ~02:30 with the user's OK; they're asleep). ~10 h, free, local.
 #   1. night2 core (results/run_night2.sh): teacher baseline P1L-low on the 500 test puzzles; FDF-low traces for
 #      N fresh puzzles; teacher stopped; answer-only vs LLM students on the same puzzles; eval on the 500.
-#   2. board-tracking arm: the same answers + one board-tracking task per puzzle (aux_tasks.py), same epochs.
+#   2. board-tracking arm: the same answers + one board-tracking task per puzzle (src/aux_tasks.py), same epochs.
 #   3. answer-only scaling arm: the same puzzles + up to SCALE_MORE more from pool_collect1, 1 epoch,
 #      sized to finish before DEADLINE (HHMM, today).
 #   4. held-out board-tracking test for the answer / aux arms; summary table; teacher restarted at the end.
 # Every step resumes if re-run. Outputs are named after RUN.
 cd ~/chess-distillation
+export PYTHONPATH=src  # shared modules live in src/
 PY=.venv/bin/python
 ts() { date '+%F %T'; }
 export RUN=${RUN:-night2} N=${N:-8000} EPOCHS=${EPOCHS:-1}
@@ -27,7 +28,7 @@ docker stop gptoss >/dev/null 2>&1; docker rm gptoss >/dev/null 2>&1   # (alread
 
 # 2. board-tracking arm
 if [ ! -s results/sft/${RUN}_aux.jsonl ]; then
-  $PY aux_tasks.py --puzzles results/$RUN/pool.jsonl --n $(wc -l < results/sft/${RUN}_answer.jsonl) \
+  $PY src/aux_tasks.py --puzzles results/$RUN/pool.jsonl --n $(wc -l < results/sft/${RUN}_answer.jsonl) \
       --out results/$RUN/aux.jsonl --seed 21
   cat results/sft/${RUN}_answer.jsonl results/$RUN/aux.jsonl | shuf --random-source=<(yes) > results/sft/${RUN}_aux.jsonl
 fi
@@ -82,7 +83,7 @@ fi
 # 4. held-out board-tracking test (answer vs aux arm) + summary
 if [ ! -s results/$RUN/aux_heldout.jsonl ]; then
   tail -n 300 pool_collect1.jsonl > results/$RUN/heldout_pool.jsonl
-  $PY aux_tasks.py --puzzles results/$RUN/heldout_pool.jsonl --n 200 --out results/$RUN/aux_heldout.jsonl --seed 77
+  $PY src/aux_tasks.py --puzzles results/$RUN/heldout_pool.jsonl --n 200 --out results/$RUN/aux_heldout.jsonl --seed 77
 fi
 arms=""; for a in ${RUN}_answer ${RUN}_aux; do [ -f ckpt/$a/adapter_model.safetensors ] && arms="$arms $a"; done
 if [ -n "$arms" ]; then
@@ -94,10 +95,10 @@ if [ -n "$arms" ]; then
     vllm serve Qwen/Qwen3-1.7B --port 8001 --gpu-memory-utilization 0.08 --max-model-len 8192 --max-num-seqs 32 \
     --enable-lora --max-lora-rank 64 --max-loras 2 --lora-modules $mods > /dev/null
   until curl -sf localhost:8001/v1/models >/dev/null; do docker ps --filter name=student -q | grep -q . || break; sleep 5; done
-  for a in $arms; do $PY aux_eval.py --tasks results/$RUN/aux_heldout.jsonl --served-name $a --out results/$RUN/auxeval_$a.jsonl; done
+  for a in $arms; do $PY experiments/aux_eval.py --tasks results/$RUN/aux_heldout.jsonl --served-name $a --out results/$RUN/auxeval_$a.jsonl; done
   docker rm -f student >/dev/null 2>&1
 fi
-RUN=$RUN $PY night2_summary.py || echo "$(ts) SUMMARY FAILED"
+RUN=$RUN $PY experiments/night2_summary.py || echo "$(ts) SUMMARY FAILED"
 
 # 5. teacher back
 eval $TEACHER_CMD >/dev/null && echo "$(ts) teacher restarting"

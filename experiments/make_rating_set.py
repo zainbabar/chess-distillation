@@ -1,6 +1,9 @@
 """Blind rating set for Claude: same puzzles, texts from several writers, shuffled, writer hidden.
 Writes results/rating_set2.md (with a facts block per puzzle to check claims against) + hidden key."""
+from pathlib import Path
 import json, random
+import sys
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))  # shared modules live in src/
 from code_trace import code_trace
 from line_facts import facts_text
 from perception import board_diagram

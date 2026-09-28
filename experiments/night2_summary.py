@@ -5,8 +5,10 @@ evening pilot arms (1.9k puzzles) and the teacher's single attempt on the same 5
 """
 import json
 import os
+import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))  # shared modules live in src/
 from analyze_pilot import mcnemar
 from puzzle_rating import rate
 

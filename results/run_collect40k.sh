@@ -18,13 +18,13 @@ for ((s = START; s < END; s += CHUNK)); do
   f=$D/pool_$part.jsonl
   [ -s $f ] || sed -n "$((s + 1)),${e}p" pool_collect1.jsonl > $f
   a=$D/engine_analysis_$part.jsonl
-  [ -s $a ] || (nohup $PY engine_analysis.py --puzzles $f --out $a --workers 8 > /dev/null 2>&1 &)
+  [ -s $a ] || (nohup $PY src/engine_analysis.py --puzzles $f --out $a --workers 8 > /dev/null 2>&1 &)
   echo "$(ts) chunk $part: puzzles $((s + 1))-$e"
-  $PY -u write_traces.py --run c40k_$part --variant FDF --puzzles $f --effort low --concurrency $CONC --max-tokens 4096 \
+  $PY -u src/write_traces.py --run c40k_$part --variant FDF --puzzles $f --effort low --concurrency $CONC --max-tokens 4096 \
       || echo "$(ts) chunk $part writer FAILED (re-run to resume)"
-  $PY -u write_traces.py --run c40k_$part --variant FDF --puzzles $f --effort low --concurrency $CONC --max-tokens 4096 \
+  $PY -u src/write_traces.py --run c40k_$part --variant FDF --puzzles $f --effort low --concurrency $CONC --max-tokens 4096 \
       > /dev/null 2>&1 || true   # retry any errored requests
-  $PY package_sft.py --traces results/traces_c40k_${part}_FDF.jsonl --puzzles $f --out $D/sft_fdf_$part.jsonl \
+  $PY src/package_sft.py --traces results/traces_c40k_${part}_FDF.jsonl --puzzles $f --out $D/sft_fdf_$part.jsonl \
       || echo "$(ts) chunk $part packaging FAILED"
 done
 cat $D/sft_fdf_?????.jsonl > $D/sft_fdf_all.jsonl

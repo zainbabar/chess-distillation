@@ -9,11 +9,13 @@ Works on partial data (missing files are skipped).
 """
 import json
 import statistics
+import sys
 from collections import Counter
 from pathlib import Path
 
 import chess
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))  # shared modules live in src/
 from puzzle_rating import rate
 
 R = Path("results")

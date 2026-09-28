@@ -28,7 +28,7 @@ curl -sf localhost:8000/v1/models >/dev/null || { echo "$(ts) teacher not runnin
 #    test set (evaluation only; ~1 h at low effort). Skip with BASELINE=0.
 if [ "${BASELINE:-1}" = "1" ]; then
   echo "$(ts) baseline: teacher P1L low on the 500 test puzzles"
-  $PY -u run_pilot.py --run test500 --formats P1L --puzzles pilot_set.jsonl --effort low --max-tokens 8192 \
+  $PY -u src/run_pilot.py --run test500 --formats P1L --puzzles pilot_set.jsonl --effort low --max-tokens 8192 \
       --concurrency 32 || echo "$(ts) baseline FAILED (re-run to resume)"
 fi
 for ((start = 0; start < MAXN; start += CHUNK)); do
@@ -40,10 +40,10 @@ for ((start = 0; start < MAXN; start += CHUNK)); do
   # Stockfish multi-PV analysis of the chunk on the (otherwise idle) CPU, in the background: enables the
   # refuted-try variant (FDFT) and code-built search traces later. Written at the end of each chunk.
   a=results/collect1/engine_analysis_part$part.jsonl
-  [ -s $a ] || (nohup $PY engine_analysis.py --puzzles $f --out $a --workers 10 > /dev/null 2>&1 &)
-  $PY -u write_traces.py --run collect1_part$part --variant FDF --puzzles $f --effort low \
+  [ -s $a ] || (nohup $PY src/engine_analysis.py --puzzles $f --out $a --workers 10 > /dev/null 2>&1 &)
+  $PY -u src/write_traces.py --run collect1_part$part --variant FDF --puzzles $f --effort low \
       --concurrency $CONC --max-tokens 4096 || echo "$(ts) chunk $part writer FAILED (re-run to resume)"
-  $PY -u package_sft.py --traces results/traces_collect1_part${part}_FDF.jsonl --puzzles $f \
+  $PY -u src/package_sft.py --traces results/traces_collect1_part${part}_FDF.jsonl --puzzles $f \
       --out results/collect1/sft_fdf_part$part.jsonl || echo "$(ts) chunk $part packaging FAILED"
 done
 cat results/collect1/sft_fdf_part?????.jsonl > results/collect1/sft_fdf.jsonl 2>/dev/null

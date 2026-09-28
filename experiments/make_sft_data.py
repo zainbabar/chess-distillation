@@ -7,7 +7,10 @@ Prompt = run_pilot.build_prompt(puzzle, "P1L"): exactly the evaluation prompt.
 """
 import argparse
 import json
+import sys
+from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))  # shared modules live in src/
 from claim_check import check
 from code_trace import code_trace
 from run_pilot import build_prompt

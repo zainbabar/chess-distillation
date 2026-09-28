@@ -18,7 +18,7 @@ while ps -eo args | grep -q "[j]udge_eval.py"; do sleep 15; done
 echo "$(ts) teacher work done"
 
 # 2. arms on the same puzzles: those with an accepted LLM trace
-$PY make_sft_data.py --puzzles pool_pilot2k.jsonl --arm llm --traces results/traces_pilot2k_FDF.jsonl --out results/sft/llm_2k_all.jsonl
+$PY experiments/make_sft_data.py --puzzles pool_pilot2k.jsonl --arm llm --traces results/traces_pilot2k_FDF.jsonl --out results/sft/llm_2k_all.jsonl
 $PY - <<'EOF'
 import json
 ids = {json.loads(l)["puzzle_id"] for l in open("results/sft/llm_2k_all.jsonl")}
@@ -29,7 +29,7 @@ with open("pool_pilot_llm.jsonl", "w") as f:
 print(len(ids), "puzzles with an accepted LLM trace")
 EOF
 for arm in answer code llm; do
-  $PY make_sft_data.py --puzzles pool_pilot_llm.jsonl --arm $arm --traces results/traces_pilot2k_FDF.jsonl --out results/sft/p_$arm.jsonl
+  $PY experiments/make_sft_data.py --puzzles pool_pilot_llm.jsonl --arm $arm --traces results/traces_pilot2k_FDF.jsonl --out results/sft/p_$arm.jsonl
 done
 
 # 3. stop the teacher (never train while it serves), train, evaluate
@@ -40,7 +40,7 @@ docker rm -f student > /dev/null 2>&1
 
 # 4. Qwen3.5-2B trainability smoke test (20 steps, LoRA) + load the adapter in vLLM
 echo "$(ts) QWEN3.5 SMOKE"
-docker exec trainenv python -u train_sft.py --data results/sft/p_llm.jsonl --out ckpt/q35_smoke --model Qwen/Qwen3.5-2B \
+docker exec trainenv python -u src/train_sft.py --data results/sft/p_llm.jsonl --out ckpt/q35_smoke --model Qwen/Qwen3.5-2B \
     --max-steps 20 --epochs 1 --batch-tokens 8192 --accum 1 --no-grad-ckpt || echo "$(ts) QWEN3.5 TRAIN FAILED"
 
 # 5. restart the teacher so the overnight run can be launched

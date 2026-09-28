@@ -6,11 +6,14 @@ writers, shuffles them, and writes:
   results/judge_calibration_key.json  - the hidden judge scores + writer for each item
 Compare the user's ratings with the key to see whether the judge can be trusted.
 """
+from pathlib import Path
 import json
 import random
+import sys
 
 import chess
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))  # shared modules live in src/
 from judge import answer_key
 
 SEED = 11

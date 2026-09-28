@@ -1,7 +1,9 @@
 """Code-built SFT data (no LLM) for a whole pool: results/collect1/sft_code.jsonl (+ board-tracking tasks)."""
+from pathlib import Path
 import json
 import sys
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))  # shared modules live in src/
 from code_trace import code_trace
 from run_pilot import build_prompt
 

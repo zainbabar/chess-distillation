@@ -16,7 +16,9 @@ import sys
 from collections import Counter
 
 from openai import AsyncOpenAI
+from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))  # shared modules live in src/
 import judge
 from line_facts import facts_text
 
