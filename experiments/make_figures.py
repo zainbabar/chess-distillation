@@ -22,7 +22,7 @@ import matplotlib.pyplot as plt
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))  # shared modules live in src/
 from path_A_report import load
 from puzzle_rating import rate
-from rl_truth_report import stats
+from rl_truth_report import legal_replies, stats
 
 OUT = Path("figures")
 P = {json.loads(l)["puzzle_id"]: json.loads(l) for l in open("pilot_set.jsonl")}
@@ -31,33 +31,12 @@ TEACHER_LOW, TEACHER_MED = "results/test500_formatP1L.jsonl", "results/test500_m
 STUDENT_A, STUDENT_B = "results/student_path_A_nothink.jsonl", "results/student_path_B_nothink.jsonl"
 GREY, DARK, BLUE, ORANGE = "#9e9e9e", "#424242", "#1f77b4", "#e07b39"
 REWARDS = [("answer only", "rlL_B", "#d62728"), ("truth v1", "rlT_B", "#9467bd"),
-           ("strict v2", "rlT2_B", "#2ca02c"), ("v3", "rlT3_B", "#1f77b4")]
+           ("strict v2", "rlT2_B", "#2ca02c"), ("v3", "rlT3_B", "#1f77b4"), ("v4", "rlT4_B", "#ff7f0e")]
 plt.rcParams.update({"font.size": 10, "axes.spines.top": False, "axes.spines.right": False})
 
 
 def solved(R):
     return sum(r["status"] == "correct" for r in R.values())
-
-
-def legal_replies(R):
-    """Written lines whose first move and the opponent's reply are both legal (a 1-move line doesn't count)."""
-    n = 0
-    for i, r in R.items():
-        mv = r.get("line_moves") or []
-        if len(mv) < 2:
-            continue
-        b = chess.Board(P[i]["fen"])
-        try:
-            for m in mv[:2]:
-                move = chess.Move.from_uci(m)
-                if move not in b.legal_moves:
-                    break
-                b.push(move)
-            else:
-                n += 1
-        except ValueError:
-            pass
-    return n
 
 
 def approx(n):
@@ -109,7 +88,7 @@ def fig_by_band():
 
 def fig_rl():
     sft, _ = load(STUDENT_B)
-    base = stats(sft, P) | {"replies": legal_replies(sft)}
+    base = stats(sft, P)
     panels = [("Solved (of 500)", lambda s: s["correct"]),
               ("False checkmate claims\n(% of 356 non-mate puzzles)", lambda s: 100 * s["false_mate"][0] / s["false_mate"][1]),
               ("Checkable claims per explanation", lambda s: s["claims"]),
@@ -122,7 +101,10 @@ def fig_rl():
         S = [base]
         for ck in ("step130", "step260", "final"):
             R, _ = load(f"results/student_{tag}_{ck}_nothink.jsonl")
-            S.append(stats(R, P) | {"replies": legal_replies(R)})
+            if R:
+                S.append(stats(R, P))
+        if len(S) < 4:
+            continue  # a run that hasn't finished yet (v4)
         for ax, (title, f) in zip(axes.flat, panels):
             ax.plot(steps, [f(s) for s in S], "o-", color=color, label=label, lw=2, ms=5)
     A, _ = load(STUDENT_A)

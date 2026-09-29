@@ -14,6 +14,10 @@ moves (min(2, solution length)), is under 40 words, or FINAL_MOVE is missing.
 --reward truth3 (v2 made the model stop calculating: wrong continuations cost more than right ones earned): like truth2
 but line credit doubled (+1.0 x correct prefix / max(line length, solution length)), invented-move penalty halved (-0.25),
 and the floor counts DISTINCT verified moves (repeating one move twice no longer passes).
+--reward truth4 (v3 was gamed: right first move + another move by its OWN side as the "reply", accepted because the claim
+checker tests moves one at a time): replays what the student wrote, in order. As v3, plus +0.25 for a complete, playable
+FINAL_LINE and -0.25 for one that breaks down or stops short, and move sequences in the text must be playable in order.
+Full definition and the offline check behind the weights: src/rewards.py.
 
 Starts from a full SFT checkpoint (ckpt/path_A, ckpt/path_B). The policy keeps fp32 master weights with bf16 autocast
 (pure-bf16 weights would round away updates at lr ~1e-6). Samples come from vLLM running inside the trainer
@@ -50,7 +54,7 @@ def main():
     ap.add_argument("--vllm-util", type=float, default=0.2)
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--save-every", type=int, default=0, help="also save <out>/step<N> (bf16) every N steps")
-    ap.add_argument("--reward", default="move", choices=["move", "truth", "truth2", "truth3"])
+    ap.add_argument("--reward", default="move", choices=["move", "truth", "truth2", "truth3", "truth4"])
     a = ap.parse_args()
 
     import torch
@@ -59,6 +63,7 @@ def main():
     from trl import GRPOConfig, GRPOTrainer
 
     from claim_check import SAN_RE, check
+    from rewards import truth4
     from run_pilot import build_prompt, grade, grade_line
 
     n = a.max_steps * a.prompts_per_step
@@ -74,7 +79,8 @@ def main():
                              "puzzle_id": p["puzzle_id"]} for p in pz])
     print(f"{len(pz)} RL puzzles (rows {a.skip + 1}-{a.skip + len(pz)} of {a.puzzles})", flush=True)
 
-    stats = {"n": 0, "correct": 0, "parse_fail": 0, "claim_err": 0, "short": 0, "line_frac": 0.0, "move_flag": 0}
+    stats = {"n": 0, "correct": 0, "parse_fail": 0, "claim_err": 0, "short": 0, "line_frac": 0.0, "move_flag": 0,
+             "playable": 0}
 
     def reward(prompts, completions, puzzle_id, **kw):
         out = []
@@ -87,6 +93,15 @@ def main():
             stats["parse_fail"] += status == "parse_fail"
             if a.reward == "move":
                 out.append(1.0 if status == "correct" else (-0.1 if status == "parse_fail" else 0.0))
+                continue
+            if a.reward == "truth4":  # src/rewards.py
+                r, info = truth4(p, text)
+                stats["line_frac"] += info["line_frac"]
+                stats["claim_err"] += info["claim_err"]
+                stats["move_flag"] += info["move_flag"] or info["seq_flag"]
+                stats["short"] += info["short"]
+                stats["playable"] += info["legal_bonus"]
+                out.append(r)
                 continue
             body = text.split("FINAL_LINE")[0].strip()
             r = 0.0
@@ -151,6 +166,7 @@ def main():
                       + (f"claim errors {stats['claim_err'] / max(1, stats['n']):.3f}, short {stats['short']}, "
                          f"move flags {stats['move_flag'] / max(1, stats['n']):.3f}, "
                          f"mean line credit on right {stats['line_frac'] / max(1, stats['correct']):.3f} "
+                         + (f"playable lines {stats['playable'] / max(1, stats['n']):.3f} " if a.reward == "truth4" else "")
                          if a.reward != "move" else "")
                       + f"{el / 60:.1f} min, {el / max(1, state.global_step):.1f} s/step "
                       f"mem {torch.cuda.max_memory_allocated() / 2**30:.1f} GiB peak", flush=True)
@@ -174,7 +190,7 @@ def main():
     json.dump({**vars(a), "puzzles_used": len(pz), "minutes": round((time.time() - t0) / 60, 1),
                "samples": stats["n"], "sample_accuracy": stats["correct"] / max(1, stats["n"]),
                "parse_fails": stats["parse_fail"], "claim_errors": stats["claim_err"], "short": stats["short"],
-               "move_flags": stats["move_flag"]}, open(f"{a.out}/rl_meta.json", "w"), indent=1)
+               "move_flags": stats["move_flag"], "playable_lines": stats["playable"]}, open(f"{a.out}/rl_meta.json", "w"), indent=1)
     print(f"saved {a.out}: {stats['n']} samples, sample accuracy {stats['correct'] / max(1, stats['n']):.3f}, "
           f"{(time.time() - t0) / 60:.1f} min", flush=True)
 

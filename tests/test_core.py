@@ -85,3 +85,29 @@ def test_rating_fit():
     out = rate(records, n_boot=200)
     assert 1400 < out["rating"] < 1600
     assert out["ci_low"] <= out["rating"] <= out["ci_high"]
+
+
+# RL reward v4 (src/rewards.py): replays what the student wrote, in order
+from rewards import truth4  # noqa: E402
+
+WHY = ("The black queen on a2 is undefended and sits right in front of my rook on the a-file, so Rxa2 simply wins "
+       "the queen. After Rxa2 the black king has nothing better than Kd7, and Ra7+ keeps chasing it with checks "
+       "while White stays a whole queen ahead in a completely winning ending.")
+
+
+def test_truth4_pays_for_a_complete_playable_line():
+    full, info = truth4(WIN_QUEEN, WHY + "\nFINAL_LINE: a1a2 e8d7 a2a7\nFINAL_MOVE: a1a2")
+    first, _ = truth4(WIN_QUEEN, WHY + "\nFINAL_LINE: a1a2\nFINAL_MOVE: a1a2")
+    assert info["legal_bonus"] and not info["short"] and not info["claim_err"]
+    assert full == pytest.approx(2.25) and first == pytest.approx(1 + 1 / 3 - 0.25)
+
+
+def test_truth4_catches_the_v3_trick():
+    # right move, then another move by White as the "reply": no better than stopping at the first move
+    r, info = truth4(WIN_QUEEN, WHY + "\nFINAL_LINE: a1a2 e1d1\nFINAL_MOVE: a1a2")
+    assert info["illegal_line"] and not info["legal_bonus"]
+    assert r == pytest.approx(truth4(WIN_QUEEN, WHY + "\nFINAL_LINE: a1a2\nFINAL_MOVE: a1a2")[0])
+    # writing the broken sequence in the text costs extra; a comma list of alternatives does not
+    _, seq = truth4(WIN_QUEEN, WHY + " The forced sequence is Rxa2 Kd1." + "\nFINAL_LINE: a1a2 e8d7 a2a7\nFINAL_MOVE: a1a2")
+    _, alts = truth4(WIN_QUEEN, WHY + " Other tries such as Ra8+, Kd2 achieve less." + "\nFINAL_LINE: a1a2 e8d7 a2a7\nFINAL_MOVE: a1a2")
+    assert seq["seq_flag"] and not alts["seq_flag"]

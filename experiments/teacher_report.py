@@ -19,7 +19,8 @@ BANDS = ["800-1000", "1000-1200", "1200-1400", "1400-1600", "1600-1800", "1800-2
 MODELS = [("teacher gpt-oss-120b, low effort", "results/test500_formatP1L.jsonl"),
           ("teacher gpt-oss-120b, medium effort", "results/test500_med_formatP1L.jsonl"),
           ("student A: answers only (1.7B)", "results/student_path_A_nothink.jsonl"),
-          ("student B: teacher explanations (1.7B)", "results/student_path_B_nothink.jsonl")]
+          ("student B: teacher explanations (1.7B)", "results/student_path_B_nothink.jsonl"),
+          ("student A + 200k more puzzles (1.7B)", "results/student_path_A200k_nothink.jsonl")]
 
 
 def pair(a, b):
@@ -32,6 +33,7 @@ def pair(a, b):
 def main():
     P = {json.loads(l)["puzzle_id"]: json.loads(l) for l in open("pilot_set.jsonl")}
     D = {name: load(path)[0] for name, path in MODELS}
+    D = {name: R for name, R in D.items() if R}  # the 200k run appears once it has been evaluated
     L = ["# The teacher at low vs medium effort, and the students against both", "",
          "500 held-out test puzzles, the same prompt for every model (board description + \"calculate the forcing line\").",
          "Teacher: gpt-oss-120b, one attempt per puzzle at its default sampling settings, max 32,768 tokens. Students:",
@@ -39,7 +41,7 @@ def main():
          "| Model | Solved | Puzzle rating (95% CI) | Illegal | No readable answer | Cut off | Legal line | "
          "Full line right | Output tokens (mean / median / max) |",
          "|---|---|---|---|---|---|---|---|---|"]
-    for name, _ in MODELS:
+    for name in D:
         R = D[name]
         st = Counter(r["status"] for r in R.values())
         rt = rate(list(R.values()))
@@ -50,8 +52,8 @@ def main():
                  f"{sum(bool(r.get('line_legal')) for r in R.values())} | "
                  f"{sum(bool(r.get('full_line_correct')) for r in R.values())} | "
                  f"{mean(toks):,.0f} / {median(toks):,.0f} / {max(toks):,} |")
-    names = [n for n, _ in MODELS]
-    low, med, a, b = (D[n] for n in names)
+    names = list(D)
+    low, med, a, b = (D[n] for n in names[:4])
     L += ["", "Output tokens for the teacher include its hidden reasoning.", "",
           "Paired comparisons (exact McNemar; puzzles only the first solved vs only the second solved):", "",
           f"- medium vs low effort: {pair(med, low)}",
@@ -59,7 +61,13 @@ def main():
           f"- student A vs teacher, medium effort: {pair(a, med)}",
           f"- student B vs teacher, low effort: {pair(b, low)}",
           f"- student B vs teacher, medium effort: {pair(b, med)}",
-          f"- student A vs student B: {pair(a, b)}", "",
+          f"- student A vs student B: {pair(a, b)}"]
+    if len(names) > 4:
+        a2 = D[names[4]]
+        L += [f"- student A + 200k vs teacher, medium effort: {pair(a2, med)}",
+              f"- student A + 200k vs teacher, low effort: {pair(a2, low)}",
+              f"- student A + 200k vs student A: {pair(a2, a)}"]
+    L += ["",
           "Solved by rating band (of 72 / 72 / 72 / 71 / 71 / 71 / 71):", "",
           "| Model | " + " | ".join(BANDS) + " |", "|---|" + "---|" * len(BANDS)]
     for name in names:

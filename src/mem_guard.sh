@@ -1,6 +1,6 @@
 #!/bin/bash
 # Kill the vLLM container if free RAM drops below a threshold, so the machine never freezes.
-# Usage: nohup ./mem_guard.sh [min_gib=8] > results/mem_guard.log 2>&1 &
+# Usage (from the repo root): nohup src/mem_guard.sh [min_gib=8] > results/mem_guard.log 2>&1 &
 MIN=${1:-8}
 echo "$(date '+%F %T') guard started (threshold ${MIN} GiB)"
 while true; do

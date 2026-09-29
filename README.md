@@ -7,6 +7,9 @@ reward honest explanations, the model kept finding ways around our fact-checker.
 
 ![Puzzle ratings of the teacher and the two students](figures/ratings.png)
 
+**[Puzzle Explorer](https://zainbabar.github.io/chess-llm-reasoning/)**: step through all 500 test puzzles and compare the
+teacher's answer with every student's written line, move by move.
+
 The teacher is [gpt-oss-120b](https://huggingface.co/openai/gpt-oss-120b), served locally with vLLM on an NVIDIA DGX
 Spark. The student is [Qwen3-1.7B](https://huggingface.co/Qwen/Qwen3-1.7B). Every answer is checked automatically, with
 [python-chess](https://python-chess.readthedocs.io/) for the rules and [Stockfish](https://stockfishchess.org/) for move
@@ -179,6 +182,7 @@ students (Qwen3-1.7B) ─► imitation (full fine-tune) ─► RL (GRPO, checked
 | [`experiments/`](experiments/) | Reports and analyses for each experiment, the figures (`make_figures.py`) and the export to `reports/` |
 | [`reports/`](reports/) | The reports behind every number above, and the graded outputs for all 500 test puzzles |
 | [`figures/`](figures/) | The charts and board pictures in this README |
+| [`docs/`](docs/) | The Puzzle Explorer page (built by `experiments/build_explorer.py`, served by GitHub Pages) |
 | [`tests/`](tests/) | Fast tests of the grader, the claim checker, the board description and the statistics (run on every push) |
 | [`results/`](results/) | The run scripts behind each experiment (`run_*.sh`), in the order they were run |
 | `pilot_set.jsonl` | The 500 held-out test puzzles |

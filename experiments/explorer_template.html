@@ -1,0 +1,424 @@
+<title>Chess LLM Puzzle Explorer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;700;800&display=swap">
+<style>
+:root {
+  --paper: #ffffff;
+  --ink: #0b0b0b;
+  --grey: #6e6a68;
+  --hair: #d9d6d4;
+  --red: #e2231a;
+  --inverse-ink: #ffffff;
+  --sq-light: #f1efed;
+  --sq-dark: #bab4b1;
+  --coord-on-light: #8f8987;
+  --coord-on-dark: #f7f5f4;
+  --hl: rgba(226, 35, 26, 0.26);
+  --arrow: rgba(11, 11, 11, 0.78);
+  --font: "Archivo", "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --paper: #0c0c0c; --ink: #f3f2f1; --grey: #9c9795; --hair: #2c2a29; --red: #ff3b2f; --inverse-ink: #0c0c0c;
+    --sq-light: #d8d4d1; --sq-dark: #938c89; --coord-on-light: #7b7472; --coord-on-dark: #f1eeec;
+    --hl: rgba(255, 59, 47, 0.34); --arrow: rgba(12, 12, 12, 0.8);
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --paper: #0c0c0c; --ink: #f3f2f1; --grey: #9c9795; --hair: #2c2a29; --red: #ff3b2f; --inverse-ink: #0c0c0c;
+  --sq-light: #d8d4d1; --sq-dark: #938c89; --coord-on-light: #7b7472; --coord-on-dark: #f1eeec;
+  --hl: rgba(255, 59, 47, 0.34); --arrow: rgba(12, 12, 12, 0.8);
+}
+* { box-sizing: border-box; }
+body { background: var(--paper); color: var(--ink); font: 400 15px/1.5 var(--font); font-variant-numeric: tabular-nums; }
+button, select, input { font: inherit; color: inherit; border-radius: 0; }
+:focus-visible { outline: 2px solid var(--red); outline-offset: 2px; }
+a { color: inherit; text-decoration-thickness: 1px; text-underline-offset: 3px; }
+a:hover { color: var(--red); }
+
+.page { max-width: 1240px; margin: 0 auto; padding-inline: 32px; padding-block: 40px 48px;
+        display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: 24px; row-gap: 0; }
+@media (max-width: 620px) { .page { padding-inline: 16px; padding-block: 24px 32px; column-gap: 12px; } }
+.page > * { grid-column: 1 / -1; }
+
+/* masthead: title + the four figures */
+.mast { display: grid; grid-template-columns: subgrid; row-gap: 18px; padding-bottom: 20px; border-bottom: 2px solid var(--ink); }
+.mast-title { grid-column: 1 / -1; }
+.kicker { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 13px; margin-bottom: 12px; }
+.kicker::before { content: ""; width: 14px; height: 14px; background: var(--red); flex: none; }
+.kicker a { text-decoration: none; }
+h1 { margin: 0; font-weight: 800; font-size: clamp(40px, 9vw, 72px); line-height: 0.92; letter-spacing: -0.045em; }
+.lede { margin: 10px 0 0; max-width: 58ch; font-size: 14px; color: var(--grey); }
+.figures { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px 24px; align-self: end; }
+.fig { display: grid; gap: 2px; align-content: end; }
+.fig b { font-weight: 800; font-size: clamp(30px, 8vw, 44px); line-height: 1; letter-spacing: -0.03em; }
+.fig b small { font-size: 0.5em; font-weight: 700; letter-spacing: 0; margin-left: 2px; }
+.fig span { font-size: 12.5px; color: var(--grey); line-height: 1.3; }
+.fig.key b { color: var(--red); }
+
+/* picker bar */
+.bar { display: grid; grid-template-columns: subgrid; align-items: center; row-gap: 10px; border-bottom: 1px solid var(--ink); padding-block: 12px; }
+.bar select, .bar input { height: 38px; padding-inline: 10px; border: 1px solid var(--ink); background: var(--paper); width: 100%; }
+#view { grid-column: 1 / span 4; } #band { grid-column: 5 / span 3; } #q { grid-column: 8 / span 2; }
+.nav { grid-column: 10 / -1; display: flex; justify-content: flex-end; align-items: center; gap: 6px; }
+@media (max-width: 900px) { #view { grid-column: 1 / -1; } #band { grid-column: 1 / span 7; } #q { grid-column: 8 / -1; } .nav { grid-column: 1 / -1; justify-content: space-between; } }
+.btn { height: 38px; padding-inline: 12px; border: 1px solid var(--ink); background: var(--paper); cursor: pointer; font-weight: 500; }
+.btn:hover:not(:disabled) { background: var(--ink); color: var(--inverse-ink); }
+.btn:disabled { color: var(--hair); border-color: var(--hair); cursor: default; }
+.pos { font-size: 13px; color: var(--grey); min-width: 70px; text-align: center; }
+
+/* main */
+main { display: grid; grid-template-columns: minmax(0, 1fr); padding-top: 28px; gap: 28px; }
+.board-col { display: grid; gap: 10px; align-content: start; min-width: 0; }
+.info { display: grid; gap: 22px; align-content: start; min-width: 0; }
+#board { display: block; width: 100%; height: auto; outline: 2px solid var(--ink); outline-offset: 0; }
+.sq-l { fill: var(--sq-light); } .sq-d { fill: var(--sq-dark); } .sq-hl { fill: var(--hl); }
+.coord { font: 700 6.5px var(--font); }
+.coord.l { fill: var(--coord-on-light); } .coord.d { fill: var(--coord-on-dark); }
+.arrow-ok { stroke: var(--arrow); fill: var(--arrow); }
+.arrow-bad { stroke: var(--red); fill: var(--red); }
+.ctrl { display: flex; align-items: center; gap: 12px; min-height: 34px; }
+.ply { font-size: 13px; color: var(--grey); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.ply b { color: var(--ink); font-weight: 700; }
+.ply.bad, .ply.bad b { color: var(--red); }
+.mv { border: 0; background: none; padding: 1px 5px; cursor: pointer; font: inherit; }
+.mv:hover { color: var(--red); }
+.mv[aria-current="true"] { background: var(--ink); color: var(--inverse-ink); }
+.no { color: var(--grey); font-weight: 400; padding-left: 8px; padding-right: 2px; }
+.illegal { color: var(--red); text-decoration: line-through; padding-inline: 6px; }
+.illegal-note { font-size: 12px; font-weight: 700; color: var(--red); }
+.stepper { display: flex; gap: 6px; }
+.stepper .btn { min-width: 42px; height: 34px; }
+
+/* puzzle info */
+.pid-row { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 6px 16px; border-top: 2px solid var(--ink); padding-top: 12px; }
+.pid-row h2 { margin: 0; font-weight: 800; font-size: 40px; line-height: 1; letter-spacing: -0.03em; }
+.rating { display: grid; justify-items: end; font-weight: 800; font-size: 40px; line-height: 1; letter-spacing: -0.03em; color: var(--grey); }
+.rating small { font-size: 12px; font-weight: 700; letter-spacing: 0; color: var(--grey); margin-bottom: 4px; }
+.meta { font-size: 14px; margin-top: 8px; }
+.themes { color: var(--grey); font-size: 13px; margin-top: 4px; }
+.notes { display: grid; gap: 8px; }
+.note { display: grid; grid-template-columns: 14px 1fr; gap: 12px; align-items: start; font-size: 14.5px; }
+.note::before { content: ""; width: 10px; height: 10px; background: var(--red); margin-top: 6px; }
+
+.answers-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; border-bottom: 1px solid var(--ink); padding-bottom: 6px; }
+.answers-head h3 { margin: 0; font-size: 15px; font-weight: 700; }
+.answers-head span { font-size: 12.5px; color: var(--grey); }
+.row { border-bottom: 1px solid var(--hair); }
+.row > button { width: 100%; display: grid; grid-template-columns: 20px minmax(0, 1fr) auto; gap: 12px; align-items: baseline;
+                padding: 10px 8px; border: 0; background: none; cursor: pointer; text-align: left; }
+.row > button:hover { background: var(--hair); }
+.row.sel > button { background: var(--ink); color: var(--inverse-ink); }
+.row.sel > button .desc, .row.sel > button .tok { color: var(--inverse-ink); opacity: 0.7; }
+.mark { font-weight: 800; font-size: 15px; }
+.mark.miss { color: var(--red); }
+.mark.ref { color: var(--grey); }
+.who { font-weight: 700; }
+.desc { font-weight: 400; color: var(--grey); font-size: 13.5px; margin-left: 6px; }
+.first { font-weight: 700; white-space: nowrap; }
+.tok { font-weight: 400; color: var(--grey); font-size: 12.5px; margin-left: 10px; }
+.detail { padding: 10px 8px 16px 40px; display: grid; gap: 8px; }
+.detail .line { font-size: 15px; font-weight: 500; }
+.detail p { margin: 0; max-width: 60ch; white-space: pre-wrap; font-size: 14.5px; }
+.detail .small { color: var(--grey); font-size: 13px; }
+.sub .row > button { padding-left: 28px; }
+.sub .detail { padding-left: 60px; }
+.sub .row:last-child { border-bottom: 0; }
+
+footer { border-top: 1px solid var(--ink); margin-top: 32px; padding-top: 10px; display: grid; grid-template-columns: subgrid; row-gap: 6px; font-size: 12.5px; color: var(--grey); }
+footer span { grid-column: span 4; }
+@media (max-width: 900px) { footer span { grid-column: 1 / -1; } }
+
+/* one screen, no page scrolling, on laptop and desktop windows */
+@media (min-width: 900px) and (min-height: 600px) {
+  html, body { height: 100%; }
+  .page { height: 100%; grid-template-rows: auto auto minmax(0, 1fr) auto; padding-block: clamp(14px, 3vh, 32px) clamp(10px, 2vh, 18px); }
+  .mast { align-items: end; padding-bottom: clamp(10px, 2vh, 18px); }
+  .mast-title { grid-column: 1 / span 6; }
+  .kicker { margin-bottom: clamp(6px, 1.2vh, 12px); }
+  h1 { font-size: clamp(34px, min(5.3vw, 7.4vh), 72px); white-space: nowrap; }
+  .lede { margin-top: clamp(4px, 1vh, 10px); font-size: 13.5px; }
+  .figures { grid-column: 7 / -1; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
+  .fig b { font-size: clamp(22px, min(2.9vw, 4.8vh), 44px); }
+  .bar { padding-block: clamp(8px, 1.4vh, 12px); }
+  .bar select, .bar input, .btn { height: 34px; }
+  main { container-type: size; display: flex; gap: clamp(24px, 3vw, 44px); padding-top: 0; margin-top: clamp(12px, 2.4vh, 28px); min-height: 0; }
+  .board-col { flex: none; width: min(56cqw, calc(100cqh - 48px)); }
+  .info { flex: 1 1 auto; min-height: 0; grid-template-rows: auto auto minmax(0, 1fr); align-content: stretch; gap: clamp(10px, 2vh, 22px); }
+  .notes:empty { display: none; }
+  .answers { display: grid; grid-template-rows: auto minmax(0, 1fr); min-height: 0; }
+  #rows { overflow-y: auto; min-height: 0; }
+  .pid-row h2, .rating { font-size: clamp(28px, 4.6vh, 44px); }
+  footer { margin-top: clamp(8px, 1.6vh, 16px); padding-top: 8px; }
+  footer span { grid-column: span 4; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .row > button, .btn, .mv { transition: background-color 0.1s linear, color 0.1s linear; }
+}
+</style>
+<!--BODY-->
+<div class="page">
+  <header class="mast">
+    <div class="mast-title">
+      <div class="kicker"><a href="https://github.com/zainbabar/chess-llm-reasoning">chess-llm-reasoning</a></div>
+      <h1>Puzzle Explorer</h1>
+      <p class="lede">500 held-out Lichess puzzles, one attempt per model. See how the 120B teacher and the 1.7B students answered, and play each line on the board.</p>
+    </div>
+    <div class="figures" id="figures" aria-label="Share of the 500 puzzles solved"></div>
+  </header>
+
+  <div class="bar" role="group" aria-label="Choose a puzzle">
+    <select id="view" aria-label="Which puzzles"></select>
+    <select id="band" aria-label="Puzzle rating"></select>
+    <input id="q" type="search" placeholder="Puzzle ID" aria-label="Go to puzzle ID" autocomplete="off" spellcheck="false">
+    <div class="nav">
+      <button class="btn" id="prevP" aria-label="Previous puzzle">Prev</button>
+      <span class="pos" id="pos"></span>
+      <button class="btn" id="nextP" aria-label="Next puzzle">Next</button>
+      <button class="btn" id="rand">Shuffle</button>
+    </div>
+  </div>
+
+  <main>
+    <div class="board-col">
+      <svg id="board" viewBox="0 0 360 360" role="img" aria-label="Chess board"></svg>
+      <div class="ctrl">
+        <div class="stepper">
+          <button class="btn" id="first" aria-label="Start position">«</button>
+          <button class="btn" id="prev" aria-label="Previous move">‹</button>
+          <button class="btn" id="next" aria-label="Next move">›</button>
+          <button class="btn" id="last" aria-label="Last move">»</button>
+        </div>
+        <div class="ply" id="ply" aria-live="polite"></div>
+      </div>
+    </div>
+
+    <div class="info">
+      <div>
+        <div class="pid-row"><h2 id="pid"></h2><span class="rating" id="prating"></span></div>
+        <div class="meta" id="pmeta"></div>
+        <div class="themes" id="themes"></div>
+      </div>
+      <div class="notes" id="notes"></div>
+      <div class="answers">
+        <div class="answers-head"><h3>Answers</h3><span>Select one to play its line</span></div>
+        <div id="rows"></div>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <span>Graded outputs and reports: <a href="https://github.com/zainbabar/chess-llm-reasoning/tree/master/reports">reports/</a></span>
+    <span>Teacher tokens include hidden reasoning. Arrow keys step moves.</span>
+    <span>Pieces: Colin M.L. Burnett (BSD), via python-chess.</span>
+  </footer>
+</div>
+
+<script>
+const DATA = /*__DATA__*/null;
+const PUZ = DATA.puzzles;
+const BY_ID = new Map(PUZ.map(p => [p.id, p]));
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const FILES = "abcdefgh";
+const TOP = ["tl", "tm", "A", "A2", "B"];
+const RL = ["rL", "r1", "r2", "r3", "r4"];
+const NAMES = {
+  tl: ["Teacher", "low effort"], tm: ["Teacher", "medium effort"],
+  A: ["Student A", "trained on answers"], A2: ["Student A", "+ 200k more puzzles"], B: ["Student B", "trained on explanations"],
+  rL: ["Answer-only reward", ""], r1: ["Truth v1", ""], r2: ["Strict v2", ""], r3: ["v3", ""], r4: ["v4", "replays the line"],
+};
+const FIG = { tl: "Teacher, 120B, low effort", tm: "Teacher, 120B, medium effort", A: "Student A, 1.7B, answers only",
+              A2: "Student A + 200k puzzles", B: "Student B, 1.7B, explanations" };
+const VIEWS = [
+  ["all", "All puzzles", () => true],
+  ["beat", "Student A solved, teacher missed", p => p.f.includes("beat")],
+  ["lost", "Teacher solved, student A missed", p => p.f.includes("lost")],
+  ["hack", "RL gaming: same side moves twice", p => p.f.includes("hack")],
+  ["fmate", "RL gaming: false checkmate claims", p => p.f.includes("fmate")],
+];
+const BANDS = [...new Set(PUZ.map(p => p.band))].sort((a, b) => parseInt(a) - parseInt(b));
+const state = { list: [], idx: 0, src: "sol", ply: 0, open: false };
+
+/* ---------- figures ---------- */
+$("#figures").innerHTML = DATA.summary.filter(s => TOP.includes(s.k)).slice(0, 4).map(s =>
+  `<div class="fig${s.k === "A" ? " key" : ""}"><b>${(100 * s.solved / s.n).toFixed(1)}<small>%</small></b><span>${esc(FIG[s.k])}</span></div>`).join("");
+
+/* ---------- choosing a puzzle ---------- */
+$("#view").innerHTML = VIEWS.map(([k, label, fn]) => `<option value="${k}">${esc(label)} (${PUZ.filter(fn).length})</option>`).join("");
+$("#band").innerHTML = `<option value="all">All ratings</option>` + BANDS.map(b => `<option value="${b}">Rated ${b.replace("-", "–")}</option>`).join("");
+const current = () => BY_ID.get(state.list[state.idx]);
+function rebuild(keepId) {
+  const fn = VIEWS.find(v => v[0] === $("#view").value)[2], band = $("#band").value;
+  state.list = PUZ.filter(p => fn(p) && (band === "all" || p.band === band)).map(p => p.id);
+  const i = state.list.indexOf(keepId);
+  show(i >= 0 ? i : 0);
+}
+$("#view").onchange = () => rebuild(current()?.id);
+$("#band").onchange = () => rebuild(current()?.id);
+$("#prevP").onclick = () => show(state.idx - 1);
+$("#nextP").onclick = () => show(state.idx + 1);
+$("#rand").onclick = () => show(Math.floor(Math.random() * state.list.length));
+$("#q").addEventListener("keydown", e => {
+  if (e.key !== "Enter") return;
+  const want = e.target.value.trim().toLowerCase();
+  const hit = PUZ.find(p => p.id.toLowerCase() === want);
+  if (!hit) { e.target.setCustomValidity("No puzzle with that ID"); e.target.reportValidity(); return; }
+  e.target.setCustomValidity(""); $("#view").value = "all"; $("#band").value = "all"; rebuild(hit.id); e.target.select();
+});
+$("#q").addEventListener("input", e => e.target.setCustomValidity(""));
+
+/* ---------- board ---------- */
+const PIECE_DEFS = Object.entries(DATA.pieces).map(([k, g]) => `<g id="pc-${k}">${g}</g>`).join("");
+const isLight = sq => (Math.floor(sq / 8) + (sq % 8)) % 2 === 1;
+function xy(sq, flip) { const f = sq % 8, r = Math.floor(sq / 8); return flip ? [(7 - f) * 45, r * 45] : [f * 45, (7 - r) * 45]; }
+function placement(pl) {
+  const out = [];
+  pl.split("/").forEach((row, i) => { let f = 0; for (const ch of row) { if (/\d/.test(ch)) f += +ch; else out.push([(7 - i) * 8 + f++, ch]); } });
+  return out;
+}
+function uciSquares(u) {
+  const m = /^([a-h])([1-8])([a-h])([1-8])/.exec(u || "");
+  return m ? [(+m[2] - 1) * 8 + FILES.indexOf(m[1]), (+m[4] - 1) * 8 + FILES.indexOf(m[3])] : null;
+}
+function arrow(from, to, flip, cls) {
+  const [x1, y1] = xy(from, flip), [x2, y2] = xy(to, flip);
+  const ax = x1 + 22.5, ay = y1 + 22.5, bx = x2 + 22.5, by = y2 + 22.5;
+  const len = Math.hypot(bx - ax, by - ay) || 1, ux = (bx - ax) / len, uy = (by - ay) / len;
+  const ex = bx - ux * 11, ey = by - uy * 11, px = -uy * 7.5, py = ux * 7.5;
+  return `<g class="${cls}"><line x1="${ax + ux * 6}" y1="${ay + uy * 6}" x2="${ex}" y2="${ey}" stroke-width="6"/>` +
+         `<polygon points="${bx},${by} ${ex + px},${ey + py} ${ex - px},${ey - py}" stroke="none"/></g>`;
+}
+const lineOf = p => state.src === "sol" ? p.sol : p.m[state.src].ln;
+function drawBoard(p) {
+  const line = lineOf(p), flip = p.fen.split(" ")[1] === "b", ply = state.ply;
+  let s = `<defs>${PIECE_DEFS}</defs>`;
+  for (let sq = 0; sq < 64; sq++) { const [x, y] = xy(sq, flip); s += `<rect class="${isLight(sq) ? "sq-l" : "sq-d"}" x="${x}" y="${y}" width="45" height="45"/>`; }
+  if (ply > 0) for (const sq of line.mv[ply - 1]) { const [x, y] = xy(sq, flip); s += `<rect class="sq-hl" x="${x}" y="${y}" width="45" height="45"/>`; }
+  for (let i = 0; i < 8; i++) {
+    const file = flip ? 7 - i : i, rank = flip ? i : 7 - i;
+    const fSq = (flip ? 7 : 0) * 8 + file, rSq = rank * 8 + (flip ? 7 : 0);
+    s += `<text class="coord ${isLight(fSq) ? "l" : "d"}" x="${i * 45 + 39}" y="357">${FILES[file]}</text>`;
+    s += `<text class="coord ${isLight(rSq) ? "l" : "d"}" x="2.5" y="${i * 45 + 8}">${rank + 1}</text>`;
+  }
+  const pl = ply === 0 ? p.fen.split(" ")[0] : line.pl[ply - 1];
+  for (const [sq, ch] of placement(pl)) { const [x, y] = xy(sq, flip); s += `<use href="#pc-${ch}" x="${x}" y="${y}"/>`; }
+  if (ply < line.san.length) s += arrow(line.mv[ply][0], line.mv[ply][1], flip, "arrow-ok");
+  else if (line.bad >= 0 && ply === line.san.length) { const q = uciSquares(line.raw[line.bad]); if (q) s += arrow(q[0], q[1], flip, "arrow-bad"); }
+  $("#board").innerHTML = s;
+}
+
+/* ---------- moves ---------- */
+function prefixes(p, n) {
+  const f = p.fen.split(" "); let num = +f[5], white = f[1] === "w"; const out = [];
+  for (let i = 0; i < n; i++) { out.push(white ? `${num}.` : (i === 0 ? `${num}…` : "")); if (!white) num++; white = !white; }
+  return out;
+}
+function lineText(p, line, live) {
+  const pre = prefixes(p, line.raw.length);
+  let s = line.san.map((m, i) => `${pre[i] ? `<span class="no">${pre[i]}</span>` : ""}` +
+    (live ? `<button class="mv" data-ply="${i + 1}" aria-current="${state.ply === i + 1}">${esc(m)}</button>` : esc(m))).join(" ");
+  if (line.bad >= 0) s += ` ${pre[line.bad] ? `<span class="no">${pre[line.bad]}</span>` : ""}<span class="illegal">${esc(line.raw[line.bad])}</span><span class="illegal-note">illegal here</span>`;
+  return s;
+}
+function renderMoves(p) {
+  const line = lineOf(p), pre = prefixes(p, line.raw.length), ply = state.ply, el = $("#ply");
+  if (line.bad >= 0 && ply === line.san.length) { el.className = "ply bad"; el.innerHTML = `Next: <b>${esc(line.raw[line.bad])}</b> is illegal here`; }
+  else if (ply === 0) { el.className = "ply"; el.textContent = "Start position"; }
+  else {
+    const num = pre.slice(0, ply).filter(Boolean).pop() || "", dots = pre[ply - 1] ? num : num.replace(/\.$/, "…");
+    el.className = "ply"; el.innerHTML = `After <b>${esc(dots)}${dots.endsWith("…") ? "" : " "}${esc(line.san[ply - 1])}</b>`;
+  }
+  document.querySelectorAll("#rows .detail [data-ply]").forEach(b => b.setAttribute("aria-current", String(+b.dataset.ply === ply)));
+  $("#first").disabled = $("#prev").disabled = state.ply === 0;
+  $("#next").disabled = $("#last").disabled = state.ply >= line.san.length;
+  drawBoard(p);
+}
+function step(d) {
+  const p = current(), n = lineOf(p).san.length;
+  state.ply = d === "first" ? 0 : d === "last" ? n : Math.max(0, Math.min(n, state.ply + d));
+  renderMoves(p);
+}
+$("#first").onclick = () => step("first"); $("#prev").onclick = () => step(-1);
+$("#next").onclick = () => step(1); $("#last").onclick = () => step("last");
+document.addEventListener("keydown", e => {
+  if (e.target.closest("input, select, textarea")) return;
+  if (e.key === "ArrowLeft") { step(-1); e.preventDefault(); }
+  else if (e.key === "ArrowRight") { step(1); e.preventDefault(); }
+});
+
+/* ---------- info + answers ---------- */
+const prettyTheme = t => t.replace(/([a-z])([A-Z])/g, "$1 $2").replace(/([a-zA-Z])(\d)/g, "$1 $2").toLowerCase();
+const mark = st => st === "correct" ? `<span class="mark" aria-label="solved">✓</span>` : `<span class="mark miss" aria-label="${esc(st)}">✗</span>`;
+function firstMove(e) {
+  const m = e.ln.san[0] || e.ln.raw[0] || "none";
+  const label = { illegal: " (illegal)", parse_fail: " (unreadable)", truncated: " (cut off)" }[e.st] || "";
+  return esc(m) + label;
+}
+function detail(p, k) {
+  if (k === "sol") return `<div class="detail"><div class="line">${lineText(p, p.sol, true)}</div><div class="small">A puzzle counts as solved when the first move matches. Any checkmate is accepted.</div></div>`;
+  const e = p.m[k];
+  let h = `<div class="detail"><div class="line">${lineText(p, e.ln, true) || "No line written."}</div>`;
+  if (k === "tl" || k === "tm") h += `<div class="small">${(e.tok || 0).toLocaleString()} tokens, most of them hidden reasoning.</div>`;
+  else if (k === "A" || k === "A2") h += `<div class="small">Writes only its line and move (${e.tok} tokens).</div>`;
+  else if (e.tx) h += `<p>${esc(e.tx)}</p>`;
+  return h + `</div>`;
+}
+function row(p, k) {
+  const sel = state.src === k, e = k === "sol" ? null : p.m[k];
+  const [a, b] = k === "sol" ? ["Lichess solution", ""] : NAMES[k];
+  const left = k === "sol" ? `<span class="mark ref">—</span>` : mark(e.st);
+  const tok = e && (k === "tl" || k === "tm") && e.tok ? `<span class="tok">${e.tok.toLocaleString()} tok</span>` : "";
+  const right = `<span class="first">${k === "sol" ? esc(p.sol.san[0]) : firstMove(e)}${tok}</span>`;
+  return `<div class="row${sel ? " sel" : ""}"><button data-src="${k}" aria-expanded="${sel}">${left}<span><span class="who">${esc(a)}</span>${b ? `<span class="desc">${esc(b)}</span>` : ""}</span>${right}</button>${sel ? detail(p, k) : ""}</div>`;
+}
+function renderAnswers(p) {
+  let h = row(p, "sol") + TOP.filter(k => p.m[k]).map(k => row(p, k)).join("");
+  const rl = RL.filter(k => p.m[k]);
+  if (rl.length) {
+    const solved = rl.filter(k => p.m[k].st === "correct").length;
+    const open = state.open || RL.includes(state.src);
+    h += `<div class="row group"><button data-group="rl" aria-expanded="${open}"><span class="mark ref">${open ? "−" : "+"}</span><span><span class="who">Student B after RL</span><span class="desc">${rl.length} reward designs</span></span><span class="first">${solved} of ${rl.length}</span></button>`;
+    if (open) h += `<div class="sub">${rl.map(k => row(p, k)).join("")}</div>`;
+    h += `</div>`;
+  }
+  $("#rows").innerHTML = h;
+}
+$("#rows").addEventListener("click", e => {
+  const mvb = e.target.closest("[data-ply]");
+  if (mvb) { state.ply = +mvb.dataset.ply; renderMoves(current()); return; }
+  const g = e.target.closest("[data-group]");
+  if (g) { state.open = !(state.open || RL.includes(state.src)); if (!state.open && RL.includes(state.src)) state.src = "sol"; renderAnswers(current()); renderMoves(current()); return; }
+  const b = e.target.closest("[data-src]"); if (!b) return;
+  state.src = b.dataset.src; state.ply = 0;
+  renderAnswers(current()); renderMoves(current());
+});
+function renderInfo(p) {
+  $("#pid").textContent = p.id;
+  $("#prating").innerHTML = `<small>Rating</small>${p.r}`;
+  const side = p.fen.split(" ")[1] === "w" ? "White" : "Black";
+  $("#pmeta").innerHTML = `${side} to move. <a href="https://lichess.org/training/${encodeURIComponent(p.id)}" target="_blank" rel="noopener">Open on Lichess</a>`;
+  $("#themes").textContent = p.th.map(prettyTheme).join(" / ");
+  const n = [];
+  if (p.f.includes("beat")) n.push(`<div class="note">Student A (1.7B) solved this. The 120B teacher at medium effort did not${p.m.tm ? `, after ${p.m.tm.tok.toLocaleString()} tokens of thinking` : ""}.</div>`);
+  if (p.f.includes("lost")) n.push(`<div class="note">The teacher at medium effort solved this. Student A did not.</div>`);
+  if (p.f.includes("hack")) n.push(`<div class="note">After RL with reward v3, student B writes a second move by its own side as the “reply”. Open “Student B after RL” and select v3.</div>`);
+  if (p.f.includes("fmate")) n.push(`<div class="note">After answer-only RL, student B claims checkmate, but this puzzle has none.</div>`);
+  $("#notes").innerHTML = n.join("");
+}
+function show(i) {
+  if (!state.list.length) return;
+  state.idx = (i + state.list.length) % state.list.length;
+  const p = current();
+  state.src = "sol"; state.ply = 0; state.open = false;
+  $("#pos").textContent = `${state.idx + 1} / ${state.list.length}`;
+  renderInfo(p); renderAnswers(p); renderMoves(p);
+  try { history.replaceState(null, "", "#" + p.id); } catch (err) { /* the preview frame may refuse */ }
+}
+
+const startId = decodeURIComponent((location.hash || "").slice(1));
+rebuild(BY_ID.has(startId) ? startId : (BY_ID.has("uURSu") ? "uURSu" : PUZ[0].id));
+</script>
