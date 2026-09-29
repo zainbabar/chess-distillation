@@ -1,4 +1,4 @@
-# Student A (answers only, full fine-tune) — THE PATH step 2
+# Student A (answers only, full fine-tune)
 
 500 held-out test puzzles, same P1L prompt for every model; greedy decoding for students.
 

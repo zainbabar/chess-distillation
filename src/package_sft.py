@@ -1,4 +1,4 @@
-"""Filter LLM-written traces and package them as SFT examples (used by results/run_collect1.sh).
+"""Filter LLM-written traces and package them as SFT examples (used by results/run_collect40k.sh).
 
 Keep a trace only if: final move right, FINAL_LINE = Lichess solution, no engine/answer leak,
 claim_check clean (no false piece-on-square / illegal move / wrong +,# / false "wins the X" / false mate).

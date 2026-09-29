@@ -49,7 +49,7 @@ ARMS = [
 
 def main():
     D = {}
-    L = [f"# Night 2 results ({RUN})", "", "500 held-out test puzzles, same prompt (P1L) for everyone.", "",
+    L = ["# LoRA students on 5.6k and 21.6k puzzles", "", "500 held-out test puzzles, same prompt (P1L) for everyone.", "",
          "| Model | Training | Correct | Rating (95% CI) | Illegal | Legal line | Full line right |",
          "|---|---|---|---|---|---|---|"]
     for label, path, arm in ARMS:

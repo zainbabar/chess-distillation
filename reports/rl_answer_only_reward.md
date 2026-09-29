@@ -55,7 +55,7 @@ Teacher gpt-oss-120b (low, 1 attempt): 222/500.
 - step 260: right answers (252): clean 46%, move flag 65%; wrong answers (248): clean 19%, move flag 77%
 - step final: right answers (264): clean 51%, move flag 8%; wrong answers (236): clean 28%, move flag 15%
 
-Earlier 100-step test (different puzzles, `results/rl_test_report.md`): A 284 → 275, B 250 → 264.
+An earlier 100-step test on different puzzles (not included here) gave A 284 → 275, B 250 → 264.
 
 ## Sanity notes (Claude, 12:15)
 
@@ -64,8 +64,9 @@ Earlier 100-step test (different puzzles, `results/rl_test_report.md`): A 284 �
   drop the continuation — 446/500 final lines are the first move only (SFT: mean line 3.8 moves, final 1.2; the reward
   only checks the first move), and a 1-move line is trivially legal; fewer written moves also means fewer move flags.
   A's lines shortened a little too (3.6 → 3.0 moves; full line right 90 → 69).
-- **B's explanations drifted into confident false mates:** they claim checkmate/forced mate on 255 of the 356 non-mate test
-  puzzles after RL (SFT: 37). Claim-clean on right answers 68% → 51%.
+- **B's explanations drifted into confident false mates:** they claim checkmate/forced mate on most of the 356 non-mate test
+  puzzles after RL: 286 (SFT: 40) by the mate-word count used in `rl_four_rewards_B.md` and the README, 293 (SFT: 55)
+  by the claim checker. (This note first gave 255 vs 37 from an earlier, looser count.) Claim-clean on right answers 68% → 51%.
 - Spot-read of 3 puzzles B solves before and after RL (j05AW 830, b8msd 894, ggDHA 1526): SFT explanations 3/3 good
   (right idea + right continuation); after RL 3/3 bad (invented "checkmate", invented square control; step 260 invents
   whole lines like "Ne7+ Qxe7 Qxe7#").

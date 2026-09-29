@@ -26,13 +26,8 @@ ckpt/
 *.jsonl
 # ...except the held-out TEST SET: a rebuild from a newer Lichess download would differ
 !test_set.jsonl
+!fresh_test_set.jsonl
 
-# Working docs (kept locally, not in the repo)
-CLAUDE.md
-AGENT_LOG.md
-RESEARCH_DIRECTION.md
-ROADMAP.md
-NOTES.md
 
 # Claude Code local state
 .claude/scheduled_tasks.lock

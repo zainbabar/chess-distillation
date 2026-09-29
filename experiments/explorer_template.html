@@ -237,8 +237,8 @@ const VIEWS = [
   ["all", "All puzzles", () => true],
   ["beat", "Student A solved, teacher missed", p => p.f.includes("beat")],
   ["lost", "Teacher solved, student A missed", p => p.f.includes("lost")],
-  ["hack", "RL gaming: same side moves twice", p => p.f.includes("hack")],
-  ["fmate", "RL gaming: false checkmate claims", p => p.f.includes("fmate")],
+  ["hack", "Reward hacking: same side moves twice", p => p.f.includes("hack")],
+  ["fmate", "After RL: false checkmate claims", p => p.f.includes("fmate")],
 ];
 const BANDS = [...new Set(PUZ.map(p => p.band))].sort((a, b) => parseInt(a) - parseInt(b));
 const state = { list: [], idx: 0, src: "sol", ply: 0, open: false };

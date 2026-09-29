@@ -1,4 +1,4 @@
-# Night 2 results (night2)
+# LoRA students on 5.6k and 21.6k puzzles
 
 500 held-out test puzzles, same prompt (P1L) for everyone.
 

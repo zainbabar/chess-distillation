@@ -43,7 +43,7 @@ def main():
     test = [json.loads(l) for l in open("test_set.jsonl")]
     test_ids = {p["puzzle_id"] for p in test}
     band = {p["puzzle_id"]: p["rating_band"] for p in test}
-    D, L = {}, ["# Student A (answers only, full fine-tune) — THE PATH step 2", "",
+    D, L = {}, ["# Student A (answers only, full fine-tune)", "",
                 "500 held-out test puzzles, same P1L prompt for every model; greedy decoding for students.", "",
                 "| Model | Correct | Rating (95% CI) | Illegal | Parse fail / truncated | Legal line | Full line right |",
                 "|---|---|---|---|---|---|---|"]

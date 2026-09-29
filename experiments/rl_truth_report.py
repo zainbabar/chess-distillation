@@ -103,7 +103,9 @@ def main():
          "- **v3**: as v2 with line credit 1.0, invented-move penalty −0.25, and the floor counting distinct moves.",
          "- **v4**: as v3, plus +0.25 for a complete, playable written line and −0.25 for one that breaks down when",
          "  replayed or stops short; move sequences in the text must be playable in order (`src/rewards.py`).", "",
-         "Test: 500 held-out puzzles, greedy, max 1,024 new tokens.", "",
+         "Test: 500 held-out puzzles, greedy, max 1,024 new tokens.",
+         "\"False mate claims\" = explanations that claim checkmate or a forced mate (checkmate, mate in N, forced mate, …)",
+         "on puzzles with no mate in the solution.", "",
          "| Model | Correct | Rating (95% CI) | Full line right | Mean line length (moves) | Right answers with no false claim | "
          "False mate claims (non-mate puzzles) | Mean tokens |",
          "|---|---|---|---|---|---|---|---|"]

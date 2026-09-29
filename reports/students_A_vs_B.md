@@ -1,4 +1,4 @@
-# Student A (answers only) vs student B (teacher explanations) — THE PATH step 2
+# Student A (answers only) vs student B (teacher explanations)
 
 Qwen3-1.7B, full fine-tune, 2 passes, lr 1e-5, the same 37,543 training puzzles and prompt; only the target text
 differs. 500 held-out test puzzles, greedy, max 1,024 new tokens.

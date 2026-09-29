@@ -1,10 +1,21 @@
-# Truth-aware RL for student B — can RL make imitated reasoning real?
+# RL for student B — can RL make imitated reasoning real?
 
-Two RL runs from the same B checkpoint on the same 3,120 fresh puzzles, identical settings (390 steps × 8 puzzles ×
-8 samples, lr 2e-6, no KL). **Outcome-only** reward: right move 1, else 0. **Truth-aware** reward: +1 right move,
-+0.5 × fraction of the solution line written correctly, −0.5 if the claim checker finds a hard false claim
-(piece not on that square, false "wins the X", false mate), −0.5 if the explanation is under 25 words.
+RL runs from the same B checkpoint on the same 3,120 fresh puzzles, identical settings (390 steps × 8 puzzles ×
+8 samples, lr 2e-6, no KL); only the reward differs:
+
+- **Outcome-only**: right move 1, else 0.
+- **Truth-aware (v1)**: +1 right move; +0.5 × fraction of the solution line written correctly; −0.5 if the claim
+  checker finds a hard false claim (piece not on that square, false "wins the X", false mate); −0.5 if the
+  explanation is under 25 words.
+- **Strict (v2)**: line credit 0.5 × correct prefix / max(line length, solution length); −0.5 hard false claim;
+  −0.5 if the text names an invented move; −0.5 if it has fewer than 2 verified moves, is under 40 words, or has
+  no answer.
+- **v3**: as v2 with line credit 1.0, invented-move penalty −0.25, and the floor counting distinct moves.
+
 Test: 500 held-out puzzles, greedy, max 1,024 new tokens.
+"False mate claims" = explanations that claim checkmate or a forced mate (checkmate, mate in N, forced mate, …) on
+puzzles with no mate in the solution. The claim checker, which checks each claim against the position, gives
+similar counts (B after SFT 55/356, outcome-only 390 steps 293/356).
 
 | Model | Correct | Rating (95% CI) | Full line right | Mean line length (moves) | Right answers with no false claim | False mate claims (non-mate puzzles) | Mean tokens |
 |---|---|---|---|---|---|---|---|
