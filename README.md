@@ -337,7 +337,7 @@ Every tool that produces a number here was checked before we trusted it, and the
 
 ## How it was built
 
-I directed the project; [Claude Code](https://claude.com/claude-code), working as an agent on the Spark, wrote the code
+This is an independent project I started out of curiosity: I wanted to run my own experiments on how much a small model can learn from a large model's reasoning. I directed the project; [Claude Code](https://claude.com/claude-code), working as an agent on the Spark, wrote the code
 and ran the experiments. I set the research questions, the experiments and the rules the agent worked under (the test
 set is only for evaluation, nothing is deleted, nothing costs money, nothing is committed without my approval); it
 proposed options, implemented them and logged every action, including its own mistakes. The calls that shaped the
