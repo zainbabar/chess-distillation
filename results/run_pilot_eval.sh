@@ -17,6 +17,6 @@ until curl -sf localhost:8001/v1/models >/dev/null; do docker ps --filter name=s
 echo "$(ts) server up with: $*"
 for arm in "$@"; do
   .venv/bin/python -u src/eval_student.py --model Qwen/Qwen3-1.7B --served-name $arm --tag pilot_$arm \
-      --puzzles ${EVAL_PUZZLES:-pilot_set.jsonl} --max-tokens 1024 --temperature 0 --concurrency 32 || echo "$(ts) EVAL $arm FAILED"
+      --puzzles ${EVAL_PUZZLES:-test_set.jsonl} --max-tokens 1024 --temperature 0 --concurrency 32 || echo "$(ts) EVAL $arm FAILED"
 done
 echo "$(ts) PILOT EVAL DONE: $*"

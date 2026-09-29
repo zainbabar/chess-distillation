@@ -55,7 +55,7 @@ for pair in "path_B path_B" "path_B_ep1 path_B/epoch1"; do
   set -- $pair
   if has_model ckpt/$2; then
     echo "$(ts) EVAL $1"
-    serve $1 $2 && $PY -u src/eval_student.py --model ckpt/$1 --served-name $1 --tag $1 --puzzles pilot_set.jsonl \
+    serve $1 $2 && $PY -u src/eval_student.py --model ckpt/$1 --served-name $1 --tag $1 --puzzles test_set.jsonl \
         --max-tokens 1024 --temperature 0 --concurrency 32 || echo "$(ts) EVAL $1 FAILED"
   else
     echo "$(ts) no checkpoint ckpt/$2 -> skip eval"

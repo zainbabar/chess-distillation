@@ -1,8 +1,8 @@
 """Build a fresh rating-stratified puzzle pool for data collection, EXCLUDING the test set.
 
-Same rules as build_pilot_set.py: RatingDeviation <= 100, 7 bands 800-2200, apply the opponent's first
+Same rules as build_test_set.py: RatingDeviation <= 100, 7 bands 800-2200, apply the opponent's first
 move to get the real puzzle position; the answer is Moves[1]; full_solution = Moves[1:].
-Puzzle ids in any --exclude file (default: pilot_set.jsonl, the held-out test set) are never picked.
+Puzzle ids in any --exclude file (default: test_set.jsonl, the held-out test set) are never picked.
 
 Usage: .venv/bin/python build_pool.py --per-band 72 --seed 7 --out pool_night1.jsonl
 """
@@ -52,7 +52,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--per-band", type=int, default=72)
     ap.add_argument("--seed", type=int, default=7)
-    ap.add_argument("--exclude", nargs="*", default=["pilot_set.jsonl"])
+    ap.add_argument("--exclude", nargs="*", default=["test_set.jsonl"])
     ap.add_argument("--out", required=True)
     args = ap.parse_args()
 

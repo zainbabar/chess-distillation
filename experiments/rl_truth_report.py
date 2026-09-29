@@ -84,7 +84,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--out", default=None, help="write the report here instead of the default results/ name")
     args = ap.parse_args()
-    P = {json.loads(l)["puzzle_id"]: json.loads(l) for l in open("pilot_set.jsonl")}
+    P = {json.loads(l)["puzzle_id"]: json.loads(l) for l in open("test_set.jsonl")}
     D, S = {}, {}
     for label, path, key in ARMS:
         R, _ = load(path)

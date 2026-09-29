@@ -1,6 +1,6 @@
 """Theme- and rating-balanced collection pool (after Master Distillation's theme-balanced sampling).
 
-- Excludes the test set (pilot_set.jsonl) and any other --exclude files (by puzzle id).
+- Excludes the test set (test_set.jsonl) and any other --exclude files (by puzzle id).
 - Quality filter: RatingDeviation <= 100, NbPlays >= 100 (well-tested puzzles).
 - Ratings 600-2600 in 200-point bands (test set is 800-2200; a little wider on both ends).
 - Balance: tactical themes are sampled up to --per-theme each, rarest theme first; the rest is filled
@@ -8,7 +8,7 @@
   of the file is itself balanced: an overnight run can stop anywhere.
 
 Usage: .venv/bin/python build_collect_pool.py --n 60000 --out pool_collect1.jsonl \
-          --exclude pilot_set.jsonl pool_night1.jsonl pool_pilot2k.jsonl
+          --exclude test_set.jsonl pool_night1.jsonl pool_pilot2k.jsonl
 """
 import argparse
 import csv
@@ -41,7 +41,7 @@ def main():
     ap.add_argument("--n", type=int, default=60000)
     ap.add_argument("--per-theme", type=int, default=1500)
     ap.add_argument("--seed", type=int, default=13)
-    ap.add_argument("--exclude", nargs="*", default=["pilot_set.jsonl"])
+    ap.add_argument("--exclude", nargs="*", default=["test_set.jsonl"])
     ap.add_argument("--out", required=True)
     args = ap.parse_args()
     rng = random.Random(args.seed)

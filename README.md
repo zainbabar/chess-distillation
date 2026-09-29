@@ -185,13 +185,13 @@ students (Qwen3-1.7B) ─► imitation (full fine-tune) ─► RL (GRPO, checked
 | [`docs/`](docs/) | The Puzzle Explorer page (built by `experiments/build_explorer.py`, served by GitHub Pages) |
 | [`tests/`](tests/) | Fast tests of the grader, the claim checker, the board description and the statistics (run on every push) |
 | [`results/`](results/) | The run scripts behind each experiment (`run_*.sh`), in the order they were run |
-| `pilot_set.jsonl` | The 500 held-out test puzzles |
+| `test_set.jsonl` | The 500 held-out test puzzles |
 
 Key files in `src/`:
 
 | File | What it does |
 |---|---|
-| `build_pilot_set.py`, `build_pool.py`, `build_collect_pool.py` | The test set, and theme- and rating-balanced training pools (test puzzles excluded by id and by position) |
+| `build_test_set.py`, `build_pool.py`, `build_collect_pool.py` | The test set, and theme- and rating-balanced training pools (test puzzles excluded by id and by position) |
 | `perception.py` | Board description for prompts (diagram, pieces, legal moves; optional tactics) |
 | `run_pilot.py` | Runs the teacher with a chosen prompt and effort, grades answers and lines, resumes where it stopped |
 | `line_facts.py`, `claim_check.py` | Machine-computed facts about a line; a tool-based checker for the claims in a text |
@@ -213,7 +213,7 @@ The full runs need the Lichess database and a GPU:
 curl -LO https://database.lichess.org/lichess_db_puzzle.csv.zst && mkdir -p data \
   && zstd -d lichess_db_puzzle.csv.zst -o data/lichess_db_puzzle.csv
 # serve gpt-oss-120b with vLLM on localhost:8000, then e.g. the teacher baseline:
-.venv/bin/python src/run_pilot.py --run test500_med --formats P1L --puzzles pilot_set.jsonl --effort medium --max-tokens 32768
+.venv/bin/python src/run_pilot.py --run test500_med --formats P1L --puzzles test_set.jsonl --effort medium --max-tokens 32768
 # student training and RL run inside the vLLM container (requirements-train.txt), e.g.:
 python src/train_sft.py --data results/sft/path_A.jsonl --out ckpt/path_A --full --epochs 2 --lr 1e-5 --batch-tokens 8192
 python src/rl_grpo.py --model ckpt/path_B --puzzles pool_collect1.jsonl --skip 40800 --out ckpt/rlT3_B --max-steps 390 --lr 2e-6 --reward truth3

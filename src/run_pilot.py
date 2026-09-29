@@ -1,11 +1,11 @@
-"""Run the pilot: ask gpt-oss-120b every puzzle in pilot_set.jsonl, in prompt format A and/or B.
+"""Run the pilot: ask gpt-oss-120b every puzzle in test_set.jsonl, in prompt format A and/or B.
 
 Every result is appended to results/<run>_format<X>.jsonl as soon as it arrives (raw response,
 reasoning, final answer, tokens, latency, grade). Re-running the same command resumes: puzzles
 already present in the output file are skipped.
 
 Usage: .venv/bin/python run_pilot.py --run pilot --formats A B|P1|P2|P1L|R1|S|E [--limit N] [--concurrency 32]
-       [--effort low|medium|high] [--max-tokens 8192] [--puzzles pilot_set.jsonl]
+       [--effort low|medium|high] [--max-tokens 8192] [--puzzles test_set.jsonl]
 """
 import argparse
 import asyncio
@@ -288,7 +288,7 @@ async def main():
     ap.add_argument("--concurrency", type=int, default=32)
     ap.add_argument("--effort", default="low", choices=["low", "medium", "high"])
     ap.add_argument("--max-tokens", type=int, default=8192)
-    ap.add_argument("--puzzles", default="pilot_set.jsonl")
+    ap.add_argument("--puzzles", default="test_set.jsonl")
     ap.add_argument("--engine-analysis", default="results/night1_engine_analysis.jsonl", help="for format E")
     ap.add_argument("--timeout", type=float, default=3 * 3600, help="per-request timeout, seconds")
     args = ap.parse_args()

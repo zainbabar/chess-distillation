@@ -22,10 +22,10 @@ results/*/
 # Trained student checkpoints (LoRA adapters / full models, GBs; regenerable with train_sft.py)
 ckpt/
 
-# Puzzle sets: regenerable with build_pilot_set.py / make_subset.py / build_pool.py (fixed seeds)
+# Puzzle sets: regenerable with build_test_set.py / make_subset.py / build_pool.py (fixed seeds)
 *.jsonl
 # ...except the held-out TEST SET: a rebuild from a newer Lichess download would differ
-!pilot_set.jsonl
+!test_set.jsonl
 
 # Working docs (kept locally, not in the repo)
 CLAUDE.md

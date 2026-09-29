@@ -1,4 +1,4 @@
-"""Pick a rating-stratified subset of pilot_set.jsonl (for the reasoning-effort comparison).
+"""Pick a rating-stratified subset of test_set.jsonl (for the reasoning-effort comparison).
 
 Usage: .venv/bin/python make_subset.py [--per-band 20] [--seed 42] [--out pilot_subset140.jsonl]
 """
@@ -11,7 +11,7 @@ ap = argparse.ArgumentParser()
 ap.add_argument("--per-band", type=int, default=20)
 ap.add_argument("--seed", type=int, default=42)
 ap.add_argument("--out", default="pilot_subset140.jsonl")
-ap.add_argument("--input", default="pilot_set.jsonl")
+ap.add_argument("--input", default="test_set.jsonl")
 args = ap.parse_args()
 
 by_band = defaultdict(list)

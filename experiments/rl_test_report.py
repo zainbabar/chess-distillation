@@ -36,7 +36,7 @@ def curve(log):
 
 
 def main():
-    P = {json.loads(l)["puzzle_id"]: json.loads(l) for l in open("pilot_set.jsonl")}
+    P = {json.loads(l)["puzzle_id"]: json.loads(l) for l in open("test_set.jsonl")}
     D, notes = {}, []
     L = ["# First RL test on the Spark — A vs B, before and after RL", "",
          "GRPO, binary reward (right move 1, else 0; no FINAL_MOVE −0.1), 100 steps × 8 fresh puzzles × 8 samples",

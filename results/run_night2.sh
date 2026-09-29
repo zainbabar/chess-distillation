@@ -29,7 +29,7 @@ if [ ! -f ckpt/${RUN}_llm/adapter_model.safetensors ]; then
     until curl -sf localhost:8000/v1/models >/dev/null; do sleep 10; done; }
   if [ "${SKIP_BASELINE:-0}" != "1" ]; then
     echo "$(ts) A: teacher baseline, P1L low, 500 test puzzles"
-    $PY -u src/run_pilot.py --run test500 --formats P1L --puzzles pilot_set.jsonl --effort low --max-tokens 8192 \
+    $PY -u src/run_pilot.py --run test500 --formats P1L --puzzles test_set.jsonl --effort low --max-tokens 8192 \
         --concurrency 32 || echo "$(ts) A FAILED"
   fi
   head -n $N pool_collect1.jsonl > results/$RUN/pool.jsonl

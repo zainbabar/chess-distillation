@@ -31,7 +31,7 @@ def pair(a, b):
 
 
 def main():
-    P = {json.loads(l)["puzzle_id"]: json.loads(l) for l in open("pilot_set.jsonl")}
+    P = {json.loads(l)["puzzle_id"]: json.loads(l) for l in open("test_set.jsonl")}
     D = {name: load(path)[0] for name, path in MODELS}
     D = {name: R for name, R in D.items() if R}  # the 200k run appears once it has been evaluated
     L = ["# The teacher at low vs medium effort, and the students against both", "",

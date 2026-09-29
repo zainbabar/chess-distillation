@@ -1,6 +1,6 @@
 """Build the Puzzle Explorer: one self-contained web page over the 500 test puzzles and every model's graded answer.
 
-Reads pilot_set.jsonl and the graded outputs (results/, or the committed copies in reports/outputs/), and writes
+Reads test_set.jsonl and the graded outputs (results/, or the committed copies in reports/outputs/), and writes
   docs/index.html                  full page for GitHub Pages (Settings -> Pages -> branch master, folder /docs)
   <--artifact-out>                 the same page without the <html>/<head> wrapper (for a claude.ai preview)
 from the template experiments/explorer_template.html (its <!--BODY--> marker splits head from body).
@@ -75,7 +75,7 @@ def main():
     ap.add_argument("--artifact-out", default=None)
     a = ap.parse_args()
 
-    P = [json.loads(l) for l in open("pilot_set.jsonl")]
+    P = [json.loads(l) for l in open("test_set.jsonl")]
     D = {}
     for key, label, short, path in MODELS:
         R, _ = load(path)

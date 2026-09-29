@@ -62,7 +62,7 @@ for arm in B A; do
     [ $ck = final ] && d=rlL_$arm
     if has_model ckpt/$d && [ ! -s results/student_${tag}_nothink.jsonl ]; then
       echo "$(ts) EVAL $tag"
-      serve $tag $d && $PY -u src/eval_student.py --model ckpt/$d --served-name $tag --tag $tag --puzzles pilot_set.jsonl \
+      serve $tag $d && $PY -u src/eval_student.py --model ckpt/$d --served-name $tag --tag $tag --puzzles test_set.jsonl \
           --max-tokens 1024 --temperature 0 --concurrency 32 | tail -n 2 || echo "$(ts) EVAL $tag FAILED"
     fi
   done

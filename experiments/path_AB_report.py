@@ -43,7 +43,7 @@ def explain_stats(R, P):
 
 
 def main():
-    test = [json.loads(l) for l in open("pilot_set.jsonl")]
+    test = [json.loads(l) for l in open("test_set.jsonl")]
     P = {p["puzzle_id"]: p for p in test}
     band = {p["puzzle_id"]: p["rating_band"] for p in test}
     D, notes = {}, []

@@ -28,7 +28,7 @@ curl -sf localhost:8000/v1/models >/dev/null || { echo "$(ts) teacher not runnin
 #    test set (evaluation only; ~1 h at low effort). Skip with BASELINE=0.
 if [ "${BASELINE:-1}" = "1" ]; then
   echo "$(ts) baseline: teacher P1L low on the 500 test puzzles"
-  $PY -u src/run_pilot.py --run test500 --formats P1L --puzzles pilot_set.jsonl --effort low --max-tokens 8192 \
+  $PY -u src/run_pilot.py --run test500 --formats P1L --puzzles test_set.jsonl --effort low --max-tokens 8192 \
       --concurrency 32 || echo "$(ts) baseline FAILED (re-run to resume)"
 fi
 for ((start = 0; start < MAXN; start += CHUNK)); do

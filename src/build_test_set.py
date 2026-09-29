@@ -11,7 +11,7 @@ import random
 import chess
 
 CSV_PATH = "data/lichess_db_puzzle.csv"
-OUT_PATH = "pilot_set.jsonl"
+OUT_PATH = "test_set.jsonl"
 SEED = 42
 TOTAL = 500
 BANDS = [(lo, lo + 200) for lo in range(800, 2200, 200)]  # 800-1000, ..., 2000-2200

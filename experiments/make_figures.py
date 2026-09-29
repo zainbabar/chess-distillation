@@ -25,7 +25,7 @@ from puzzle_rating import rate
 from rl_truth_report import legal_replies, stats
 
 OUT = Path("figures")
-P = {json.loads(l)["puzzle_id"]: json.loads(l) for l in open("pilot_set.jsonl")}
+P = {json.loads(l)["puzzle_id"]: json.loads(l) for l in open("test_set.jsonl")}
 BANDS = ["800-1000", "1000-1200", "1200-1400", "1400-1600", "1600-1800", "1800-2000", "2000-2200"]
 TEACHER_LOW, TEACHER_MED = "results/test500_formatP1L.jsonl", "results/test500_med_formatP1L.jsonl"
 STUDENT_A, STUDENT_B = "results/student_path_A_nothink.jsonl", "results/student_path_B_nothink.jsonl"

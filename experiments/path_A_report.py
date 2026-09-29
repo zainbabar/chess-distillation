@@ -40,7 +40,7 @@ def load(path):
 
 
 def main():
-    test = [json.loads(l) for l in open("pilot_set.jsonl")]
+    test = [json.loads(l) for l in open("test_set.jsonl")]
     test_ids = {p["puzzle_id"] for p in test}
     band = {p["puzzle_id"]: p["rating_band"] for p in test}
     D, L = {}, ["# Student A (answers only, full fine-tune) — THE PATH step 2", "",

@@ -1,6 +1,6 @@
 # Student pilot report
 
-Qwen3-1.7B + LoRA r64, 3 epochs, the same 1,892 training puzzles (pool_pilot_llm.jsonl, 800–2200), differing only in the training text. Test: pilot_set.jsonl (500 puzzles, held out), greedy decoding, the teacher's P1L prompt. Zero-shot baseline: 1/140.
+Qwen3-1.7B + LoRA r64, 3 epochs, the same 1,892 training puzzles (pool_pilot_llm.jsonl, 800–2200), differing only in the training text. Test: test_set.jsonl (500 puzzles, held out), greedy decoding, the teacher's P1L prompt. Zero-shot baseline: 1/140.
 
 | Arm | n | Correct | Illegal | No answer | Exact format | Legal line | Full line right | Mean tokens | Puzzle rating (95% CI) |
 |---|---|---|---|---|---|---|---|---|---|

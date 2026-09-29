@@ -41,4 +41,4 @@ rows = [json.loads(l) for l in gzip.open("reports/outputs/student_path_A_nothink
 print(sum(r["status"] == "correct" for r in rows), "of", len(rows))   # 284 of 500
 ```
 
-The 500 test puzzles themselves are in `pilot_set.jsonl` at the top of the repo.
+The 500 test puzzles themselves are in `test_set.jsonl` at the top of the repo.

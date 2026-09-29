@@ -22,7 +22,7 @@ fi
 if curl -sf localhost:8000/v1/models > /dev/null; then
   echo "$(ts) teacher up; MEDIUM baseline on the 500"
   left=$(( $(date -d "$BASE_DEADLINE" +%s) - $(date +%s) ))
-  timeout $left $PY -u src/run_pilot.py --run test500_med --formats P1L --puzzles pilot_set.jsonl --effort medium \
+  timeout $left $PY -u src/run_pilot.py --run test500_med --formats P1L --puzzles test_set.jsonl --effort medium \
       --max-tokens 32768 --concurrency 32 > results/test500_med.log 2>&1
   rc=$?; [ $rc = 124 ] && echo "$(ts) baseline hit the deadline (partial results kept; resumable)"
   echo "$(ts) BASELINE DONE: $(grep -c . results/test500_med_formatP1L.jsonl 2>/dev/null) records"
@@ -61,7 +61,7 @@ for ck in step130 step260 final; do
   d=rlT3_B/$ck; tag=rlT3_B_$ck; [ $ck = final ] && d=rlT3_B
   if has_model ckpt/$d && [ ! -s results/student_${tag}_nothink.jsonl ]; then
     echo "$(ts) EVAL $tag"
-    serve $tag $d && $PY -u src/eval_student.py --model ckpt/$d --served-name $tag --tag $tag --puzzles pilot_set.jsonl \
+    serve $tag $d && $PY -u src/eval_student.py --model ckpt/$d --served-name $tag --tag $tag --puzzles test_set.jsonl \
         --max-tokens 1024 --temperature 0 --concurrency 32 | tail -n 2 || echo "$(ts) EVAL $tag FAILED"
   fi
 done

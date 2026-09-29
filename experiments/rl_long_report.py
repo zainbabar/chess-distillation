@@ -41,7 +41,7 @@ def pair(a, b):
 
 
 def main():
-    P = {json.loads(l)["puzzle_id"]: json.loads(l) for l in open("pilot_set.jsonl")}
+    P = {json.loads(l)["puzzle_id"]: json.loads(l) for l in open("test_set.jsonl")}
     D = {}
     for arm in ("A", "B"):
         for ck, pat in CKS:

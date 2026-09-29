@@ -46,7 +46,7 @@ for arm in A B; do
   if has_model $out; then
     echo "$(ts) EVAL rl_$arm"
     serve rl_$arm rl_$arm && $PY -u src/eval_student.py --model $out --served-name rl_$arm --tag rl_$arm \
-        --puzzles pilot_set.jsonl --max-tokens 1024 --temperature 0 --concurrency 32 | tail -n 2 \
+        --puzzles test_set.jsonl --max-tokens 1024 --temperature 0 --concurrency 32 | tail -n 2 \
       || echo "$(ts) EVAL rl_$arm FAILED"
     docker rm -f student > /dev/null 2>&1
   fi

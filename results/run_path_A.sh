@@ -97,7 +97,7 @@ else
   if [ "$MODE" = full ]; then
     # serving check: the saved full model loads in vLLM and answers (20 test puzzles, evaluation only)
     if serve full path_A_smoke path_A_smoke; then
-      head -n 20 pilot_set.jsonl > results/path_A_smoke_eval_puzzles.jsonl
+      head -n 20 test_set.jsonl > results/path_A_smoke_eval_puzzles.jsonl
       evalm path_A_smoke path_A_smoke results/path_A_smoke_eval_puzzles.jsonl
     else
       echo "$(ts) WARNING: full-model serving failed in the smoke test (training continues; fix eval in the morning)"
@@ -120,7 +120,7 @@ for pair in "path_A path_A" "path_A_ep1 path_A/epoch1"; do
   set -- $pair
   if has_model ckpt/$2; then
     echo "$(ts) EVAL $1"
-    serve $MODE $1 $2 && evalm $1 $1 pilot_set.jsonl
+    serve $MODE $1 $2 && evalm $1 $1 test_set.jsonl
   else
     echo "$(ts) no checkpoint ckpt/$2 -> skip eval"
   fi

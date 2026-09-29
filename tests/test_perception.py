@@ -100,7 +100,7 @@ def check(board, level):
 
 def main():
     n_random = int(sys.argv[1]) if len(sys.argv) > 1 else 3000
-    boards = [chess.Board(json.loads(l)["fen"]) for l in open("pilot_set.jsonl")]
+    boards = [chess.Board(json.loads(l)["fen"]) for l in open("test_set.jsonl")]
     rng = random.Random(0)
     with open("data/lichess_db_puzzle.csv", newline="") as f:
         rows = [r for i, r in enumerate(csv.DictReader(f)) if i % 1000 == 0]  # ~6k spread rows

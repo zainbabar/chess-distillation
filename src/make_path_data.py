@@ -17,7 +17,7 @@ def main():
     ap.add_argument("--smoke", type=int, default=400)
     ap.add_argument("--collect", default="results/collect40k/sft_fdf_all.jsonl")
     args = ap.parse_args()
-    test_ids = {json.loads(l)["puzzle_id"] for l in open("pilot_set.jsonl")}
+    test_ids = {json.loads(l)["puzzle_id"] for l in open("test_set.jsonl")}
     rows, seen = [], set()
     for src in (NIGHT2, args.collect):
         for l in open(src):
