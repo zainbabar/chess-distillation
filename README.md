@@ -6,7 +6,7 @@
 reward honest explanations, the model kept finding ways around our fact-checker.**
 
 ![Puzzle ratings of the teacher and the two students](figures/ratings.png)
-
+### Interactive Results Explorer
 **[Puzzle Explorer](https://zainbabar.github.io/chess-llm-reasoning/)**: step through all 500 test puzzles and compare the
 teacher's answer with every student's written line, move by move.
 
