@@ -8,7 +8,7 @@ new way each time.**
 
 ![Puzzle ratings of the teacher and the two students](figures/ratings.png)
 
-**[Puzzle Explorer](https://zainbabar.github.io/chess-llm-reasoning/)**: step through all 500 test puzzles and compare
+**[Puzzle Explorer](https://zainbabar.github.io/chess-llm-reasoning/)**: an interactive site for the results: step through all 500 test puzzles and compare
 the teacher's answer with every student's written line, move by move.
 
 The project is about distillation: training a small "student" model on a large "teacher" model's outputs, here the
@@ -16,16 +16,17 @@ teacher's written text rather than its output probabilities (sequence-level dist
 student that learns from the teacher's written explanations does better than one trained on the answers alone, with no
 teacher involved, before and after reinforcement learning (RL).
 
-The teacher is [gpt-oss-120b](https://huggingface.co/openai/gpt-oss-120b) (a mixture-of-experts model: 117B parameters,
-about 5B active per token), served locally with [vLLM](https://github.com/vllm-project/vllm) (an LLM serving engine) on
-an ASUS Ascent GX10 (NVIDIA's GB10 chip, the DGX Spark design; "the Spark" below). The student is
-[Qwen3-1.7B](https://huggingface.co/Qwen/Qwen3-1.7B), run with thinking mode off (Qwen3's switch for writing out
-reasoning before answering). Every answer is graded automatically against the Lichess solution with
-[python-chess](https://python-chess.readthedocs.io/), and [Stockfish](https://stockfishchess.org/), the standard
-open-source chess engine, was used to spot-check that this grading is fair. Puzzles come from the [Lichess puzzle
+The teacher is [gpt-oss-120b](https://huggingface.co/openai/gpt-oss-120b) served locally with [vLLM](https://github.com/vllm-project/vllm) on
+an ASUS Ascent GX10 (NVIDIA GB10, the DGX Spark design). The student is
+[Qwen3-1.7B](https://huggingface.co/Qwen/Qwen3-1.7B), run with thinking mode off. Every answer is graded automatically against the Lichess solution with
+[python-chess](https://python-chess.readthedocs.io/), and [Stockfish](https://stockfishchess.org/), was used to spot-check that this grading is fair. Puzzles come from the [Lichess puzzle
 database](https://database.lichess.org/#puzzles), and 500 puzzles rated 800 to 2200 are held out from training as the
-test set. Status (September 2026): the main experiment is finished, and the main results can be checked against the
-reports and raw outputs in [`reports/`](reports/). **Coming soon:** results on a fresh test set of 500 puzzles no model
+test set.
+
+**Status** (September 2026): the main experiment is finished, and the main results can be checked against the
+reports and raw outputs in [`reports/`](reports/). 
+
+**Coming soon:** results on a fresh test set of 500 puzzles no model
 or experiment has seen, used once with everything fixed in advance ([protocol](reports/fresh_test_protocol.md)),
 including the untrained model at the students' exact settings; a measured accuracy for the claim checker; a fix for its
 negation bug (see Claim checker); and release of the training data and models.
@@ -337,11 +338,10 @@ Every tool that produces a number here was checked before we trusted it, and the
 
 ## How it was built
 
-This is an independent project I started out of curiosity: I wanted to run my own experiments on how much a small model can learn from a large model's reasoning. I directed the project; [Claude Code](https://claude.com/claude-code), working as an agent on the Spark, wrote the code
+This is an independent research project I started out of curiosity: I wanted to run my own experiments distillation, gauging how much a small model can learn from a large model's reasoning. I directed the project; [Claude Code](https://claude.com/claude-code), working as an agent on the Spark, wrote the code
 and ran the experiments. I set the research questions, the experiments and the rules the agent worked under (the test
 set is only for evaluation, nothing is deleted, nothing costs money, nothing is committed without my approval); it
-proposed options, implemented them and logged every action, including its own mistakes. The calls that shaped the
-project:
+proposed options, implemented them and logged every action, including its own mistakes. A few core decisions that shaped the direction of the project:
 
 - **Diagnosing the teacher before copying it.** The first test showed gpt-oss-120b playing illegal moves 22% of the time
   from a raw position, so I made perception the starting point: give the teacher a python-chess description of the
