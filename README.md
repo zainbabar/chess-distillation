@@ -8,28 +8,30 @@ new way each time.**
 
 ![Puzzle ratings of the teacher and the two students](figures/ratings.png)
 
-**[Puzzle Explorer](https://zainbabar.github.io/chess-llm-reasoning/)**: an interactive site for the results: step through all 500 test puzzles and compare
-the teacher's answer with every student's written line, move by move.
+**[Puzzle Explorer](https://zainbabar.github.io/chess-llm-reasoning/)**: an interactive site for the results: step
+through all 500 test puzzles and compare the teacher's answer with every student's written line, move by move.
 
 The project is about distillation: training a small "student" model on a large "teacher" model's outputs, here the
-teacher's written text rather than its output probabilities (sequence-level distillation). The question is whether a
-student that learns from the teacher's written explanations does better than one trained on the answers alone, with no
-teacher involved, before and after reinforcement learning (RL).
+teacher's written text (sequence-level distillation; [Kim & Rush, 2016](#references)) rather than its output
+probabilities (the original form of distillation; [Hinton et al., 2015](#references)). The question is whether a student
+that learns from the teacher's written explanations does better than one trained on the answers alone, with no teacher
+involved, before and after reinforcement learning (RL).
 
-The teacher is [gpt-oss-120b](https://huggingface.co/openai/gpt-oss-120b) served locally with [vLLM](https://github.com/vllm-project/vllm) on
-an ASUS Ascent GX10 (NVIDIA GB10, the DGX Spark design). The student is
-[Qwen3-1.7B](https://huggingface.co/Qwen/Qwen3-1.7B), run with thinking mode off. Every answer is graded automatically against the Lichess solution with
-[python-chess](https://python-chess.readthedocs.io/), and [Stockfish](https://stockfishchess.org/), was used to spot-check that this grading is fair. Puzzles come from the [Lichess puzzle
-database](https://database.lichess.org/#puzzles), and 500 puzzles rated 800 to 2200 are held out from training as the
-test set.
+The teacher is [gpt-oss-120b](https://huggingface.co/openai/gpt-oss-120b) served locally with
+[vLLM](https://github.com/vllm-project/vllm) on an ASUS Ascent GX10 (NVIDIA GB10, the DGX Spark design). The student is
+[Qwen3-1.7B](https://huggingface.co/Qwen/Qwen3-1.7B), run with thinking mode off. Every answer is graded automatically
+against the Lichess solution with [python-chess](https://python-chess.readthedocs.io/), and
+[Stockfish](https://stockfishchess.org/), was used to spot-check that this grading is fair. Puzzles come from the
+[Lichess puzzle database](https://database.lichess.org/#puzzles), and 500 puzzles rated 800 to 2200 are held out from
+training as the test set.
 
-**Status** (September 2026): the main experiment is finished, and the main results can be checked against the
-reports and raw outputs in [`reports/`](reports/). 
+**Status** (September 2026): the main experiment is finished, and the main results can be checked against the reports
+and raw outputs in [`reports/`](reports/).
 
-**Coming soon:** results on a fresh test set of 500 puzzles no model
-or experiment has seen, used once with everything fixed in advance ([protocol](reports/fresh_test_protocol.md)),
-including the untrained model at the students' exact settings; a measured accuracy for the claim checker; a fix for its
-negation bug (see Claim checker); and release of the training data and models.
+**Coming soon:** results on a fresh test set of 500 puzzles no model or experiment has seen, used once with everything
+fixed in advance ([protocol](reports/fresh_test_protocol.md)), including the untrained model at the students' exact
+settings; a measured accuracy for the claim checker; a fix for its negation bug (see Claim checker); and release of the
+training data and models.
 
 ## Summary
 
@@ -52,7 +54,7 @@ negation bug (see Claim checker); and release of the training data and models.
   one problem, and each time the model reward-hacked the checker in a new way: vaguer text, stopping after one move, or
   fake replies.
 
-**Contents:** [Two examples](#two-examples) · [Setup](#setup) · [Findings](#findings) ([perception](#1-perception-is-a-major-weakness-of-the-teacher), [answers only](#2-a-small-student-trained-on-answers-scores-on-par-with-the-teacher), [explanations](#3-imitating-the-teachers-explanations-made-the-student-worse), [RL](#4-rl-never-lifted-b-past-a-and-every-reward-on-the-reasoning-was-reward-hacked), [LLM judge](#5-the-llm-judge-we-tried-couldnt-grade-chess-explanations-reliably)) · [Takeaways](#takeaways) · [Limitations](#limitations) · [How we checked](#how-we-checked-the-results) · [How it was built](#how-it-was-built) · [Code and reproducing](REPRODUCING.md)
+**Contents:** [Two examples](#two-examples) · [Setup](#setup) · [Findings](#findings) ([perception](#1-perception-is-a-major-weakness-of-the-teacher), [answers only](#2-a-small-student-trained-on-answers-scores-on-par-with-the-teacher), [explanations](#3-imitating-the-teachers-explanations-made-the-student-worse), [RL](#4-rl-never-lifted-b-past-a-and-every-reward-on-the-reasoning-was-reward-hacked), [LLM judge](#5-the-llm-judge-we-tried-couldnt-grade-chess-explanations-reliably)) · [Takeaways](#takeaways) · [Limitations](#limitations) · [How we checked](#how-we-checked-the-results) · [How it was built](#how-it-was-built) · [Code and reproducing](REPRODUCING.md) · [References](#references)
 
 ## Two examples
 
@@ -119,10 +121,10 @@ which trains small add-on weights instead), two passes over the same 37,543 trai
 
 - **A (answers only):** the target is the Lichess line and move. No teacher is involved.
 - **B (explanations):** the target is an explanation written by the teacher, followed by the same line and move.
-  Following [Master Distillation](https://arxiv.org/abs/2603.20510) ("Grounded Chess Reasoning in Language Models via
-  Master Distillation", Tang et al.), the teacher (low effort) is shown the Lichess solution and writes "as if
-  discovering" it. We add python-chess facts about the line to its prompt (captures, checks, forks, material) and drop
-  any text our claim checker catches making a false claim (about 6% of texts).
+  Following [Master Distillation](https://arxiv.org/abs/2603.20510) ([Tang et al., 2026](#references)), the teacher (low
+  effort) is shown the Lichess solution and writes "as if discovering" it. We add python-chess facts about the line to
+  its prompt (captures, checks, forks, material) and drop any text our claim checker catches making a false claim (about
+  6% of texts).
 
 **Claim checker.** A rule-based fact-checker (no AI) for chess text. It pulls out the statements it can check via regex
 (a piece on a square, "the queen on a2"; material won, "wins the rook"; checkmate claims; moves written in chess
@@ -137,11 +139,11 @@ negation ("there is no queen on b3"), which affected 1 of the 282 piece claims i
 128 GB of unified memory, over about a week and with no cloud compute.
 
 **RL.** Reinforcement learning with verifiable rewards (RLVR): every reward is computed by code, from python-chess
-checks against the known solution, not by a learned reward model or an LLM judge. The method is GRPO (the model makes 8
-tries per puzzle, and tries that score above the group's average are reinforced), implemented with
-[TRL](https://github.com/huggingface/trl), on 3,120 puzzles not used before: 390 steps of 8 puzzles × 8 tries at
-temperature 1.0 (up to 384 new tokens), learning rate 2e-6, no KL penalty (nothing pulls the model back toward its
-starting behaviour), about five hours per run on the Spark. Every B run starts from the same checkpoint and sees the
+checks against the known solution, not by a learned reward model or an LLM judge. The method is GRPO ([Shao et al.,
+2024](#references); the model makes 8 tries per puzzle, and tries that score above the group's average are reinforced),
+implemented with [TRL](https://github.com/huggingface/trl), on 3,120 puzzles not used before: 390 steps of 8 puzzles × 8
+tries at temperature 1.0 (up to 384 new tokens), learning rate 2e-6, no KL penalty (nothing pulls the model back toward
+its starting behaviour), about five hours per run on the Spark. Every B run starts from the same checkpoint and sees the
 same puzzles in the same order; only the reward changes.
 
 ## Findings
@@ -338,10 +340,12 @@ Every tool that produces a number here was checked before we trusted it, and the
 
 ## How it was built
 
-This is an independent research project I started out of curiosity: I wanted to run my own experiments distillation, gauging how much a small model can learn from a large model's reasoning. I directed the project; [Claude Code](https://claude.com/claude-code), working as an agent on the Spark, wrote the code
-and ran the experiments. I set the research questions, the experiments and the rules the agent worked under (the test
-set is only for evaluation, nothing is deleted, nothing costs money, nothing is committed without my approval); it
-proposed options, implemented them and logged every action, including its own mistakes. A few core decisions that shaped the direction of the project:
+This is an independent research project I started out of curiosity: I wanted to run my own experiments on distillation,
+gauging how much a small model can learn from a large model's reasoning. I directed the project; [Claude
+Code](https://claude.com/claude-code), working as an agent on the Spark, wrote the code and ran the experiments. I set
+the research questions, the experiments and the rules the agent worked under (the test set is only for evaluation,
+nothing is deleted, nothing costs money, nothing is committed without my approval); it proposed options, implemented
+them and logged every action, including its own mistakes. A few core decisions that shaped the direction of the project:
 
 - **Diagnosing the teacher before copying it.** The first test showed gpt-oss-120b playing illegal moves 22% of the time
   from a raw position, so I made perception the starting point: give the teacher a python-chess description of the
@@ -374,6 +378,18 @@ The pipeline diagram, the folder map, the key files and the commands to rerun ev
 [`REPRODUCING.md`](REPRODUCING.md). The fast checks need no GPU: `pip install -r requirements.txt`, then `python -m
 pytest tests` (runs automatically on every push) and `python experiments/make_figures.py` (redraws every figure from the
 committed outputs).
+
+## References
+
+- Z. Tang, Q. Wen, S. Grief-Albert, Y. Elgabra, B. Yang, H. Dong, A. Anderson. [Grounded Chess Reasoning in Language
+  Models via Master Distillation](https://arxiv.org/abs/2603.20510). arXiv:2603.20510, 2026. The recipe student B
+  follows: explanations written "as if discovering" the solution, then RL.
+- Y. Kim, A. M. Rush. [Sequence-Level Knowledge Distillation](https://arxiv.org/abs/1606.07947). EMNLP 2016. The kind of
+  distillation used for student B.
+- G. Hinton, O. Vinyals, J. Dean. [Distilling the Knowledge in a Neural Network](https://arxiv.org/abs/1503.02531).
+  arXiv:1503.02531, 2015. Distillation from the teacher's output probabilities, not used here.
+- Z. Shao et al. [DeepSeekMath: Pushing the Limits of Mathematical Reasoning in Open Language
+  Models](https://arxiv.org/abs/2402.03300). arXiv:2402.03300, 2024. Introduces GRPO.
 
 ## License
 
