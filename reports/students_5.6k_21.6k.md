@@ -32,3 +32,7 @@ Held-out board-tracking test (200 tasks from unseen puzzles):
 - night2_answer, square tasks: 0/105 exactly right
 - night2_aux, board tasks: 1/95 exactly right
 - night2_aux, square tasks: 53/105 exactly right
+
+Note (added 2026-10-03): the table has no column for answers cut off at the token limit or with no readable move.
+Night 2's code-built student had 13 answers cut off and the LLM-explanation student 4 cut off + 1 unreadable; the
+others had none (counts from `reports/outputs/`).

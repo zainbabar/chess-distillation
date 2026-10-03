@@ -57,7 +57,7 @@ Teacher gpt-oss-120b (low, 1 attempt): 222/500.
 
 An earlier 100-step test on different puzzles (not included here) gave A 284 → 275, B 250 → 264.
 
-## Sanity notes (Claude, 12:15)
+## Sanity notes (Claude, 2026-09-27 12:15)
 
 - All 8 evals graded 500/500; parse fails 0; B final has 4 truncated answers.
 - **B's "legal line" 454 and "move flag 8%" at the final checkpoint are artifacts, not better reasoning:** RL taught B to
@@ -73,5 +73,10 @@ An earlier 100-step test on different puzzles (not included here) gave A 284 →
 - **Exploration collapsed:** groups where all 8 samples got the same reward (no learning signal) rose from 34% → 83% (A)
   and 28% → 66% (B); the training curves peak mid-run (A 0.59, B 0.53) and sag after — the policies became nearly
   deterministic. No entropy/KL control in this recipe (beta 0, symmetric clip).
-- Checkpoint-to-checkpoint swings of ±20–25 puzzles (e.g. B 277 → 252 → 264) are bigger than eval noise alone (~±15), so
-  the policies themselves oscillate; single seed.
+- Checkpoint-to-checkpoint swings of ±20–25 puzzles (e.g. B 277 → 252 → 264): the evaluations are greedy and
+  deterministic, so these are real differences between the checkpoints' policies, not evaluation noise; the policies
+  oscillate during training (single seed).
+- *(Added 2026-10-03.)* Each B checkpoint against **A after SFT** (284/500; exact McNemar, computed from
+  `reports/outputs/`), the comparison behind the README's Finding 4. Answer-only reward, puzzles only A right vs only
+  B right: step 130 51 vs 44 (p = 0.54); step 260 70 vs 38 (p = 0.0027); final 57 vs 37 (p = 0.0495). (The "B vs A at equal RL steps" lines above compare B with A *after A's
+  own RL*, which is a different question: final p = 0.84.) For the other rewards see `rl_five_rewards_B.md`.

@@ -34,7 +34,7 @@ MODELS = [  # (label, fresh-test output, development-set output)
 ]
 A, B, LOW, MED = MODELS[0][0], MODELS[1][0], MODELS[5][0], MODELS[6][0]
 PRIMARY = [(A, B), (A, LOW), (A, MED)]
-SECONDARY = [(MODELS[2][0], A), (MODELS[3][0], B), (B, LOW), (B, MED), (MED, LOW)]
+SECONDARY = [(MODELS[2][0], MED), (MODELS[2][0], LOW), (MODELS[2][0], A), (MODELS[3][0], B), (B, LOW), (B, MED), (MED, LOW)]
 
 
 def holm(ps):

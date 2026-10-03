@@ -19,6 +19,12 @@ REPORTS = {  # public name <- local report
     "students_A_vs_B.md": "results/path_AB_report.md",
     "rl_answer_only_reward.md": "results/rl_long_report.md",
     "rl_four_rewards_B.md": "results/rl_truth3_report.md",
+    "rl_five_rewards_B.md": "results/rl_truth4_report.md",
+    "fresh_test.md": "results/fresh_test_report.md",
+    "answer_first_sampling_rl_fresh.md": "results/overnight4_report.md",
+    "tightening_checks.md": "results/tighten_report.md",
+    "final_checks.md": "results/final_checks_report.md",
+    "replication_and_fresh_test_2.md": "results/replication_report.md",
 }
 OUTPUTS = ["pilot_formatA", "pilot_formatB", "test500_formatP1L", "test500_med_formatP1L"] + [f"student_{t}_nothink" for t in (
     "pilot_p_answer", "pilot_p_code", "pilot_p_llm",

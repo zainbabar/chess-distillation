@@ -11,6 +11,7 @@ Qwen3-1.7B, full fine-tune on 37,543 puzzles, greedy, max 1,024 new tokens.
 | teacher gpt-oss-120b, medium effort | **265/500 (53.0%)** | 1540 (1481–1596) | 11 | 2 | 0 | 355 | 96 | 8,427 / 8,490 / 19,233 |
 | student A: answers only (1.7B) | **284/500 (56.8%)** | 1594 (1530–1660) | 0 | 0 | 0 | 317 | 90 | 26 / 24 / 57 |
 | student B: teacher explanations (1.7B) | **250/500 (50.0%)** | 1497 (1428–1567) | 1 | 0 | 0 | 131 | 66 | 179 / 179 / 270 |
+| student A + 200k more puzzles (1.7B) | **319/500 (63.8%)** | 1695 (1636–1755) | 0 | 0 | 0 | 359 | 128 | 26 / 24 / 57 |
 
 Output tokens for the teacher include its hidden reasoning.
 
@@ -23,6 +24,9 @@ score minus the second's, in points, with a 95% paired bootstrap interval):
 - student B vs teacher, low effort: 100 vs 72, p = 0.039; gap +5.6 points (95% interval +0.6 to +10.8)
 - student B vs teacher, medium effort: 79 vs 94, p = 0.29; gap -3.0 points (95% interval -8.2 to +2.2)
 - student A vs student B: 77 vs 43, p = 0.0024; gap +6.8 points (95% interval +2.6 to +11.0)
+- student A + 200k vs teacher, medium effort: 113 vs 59, p = 4.7e-05; gap +10.8 points (95% interval +5.8 to +16.0)
+- student A + 200k vs teacher, low effort: 133 vs 36, p = 2.8e-14; gap +19.4 points (95% interval +14.6 to +24.4)
+- student A + 200k vs student A: 63 vs 28, p = 0.00031; gap +7.0 points (95% interval +3.2 to +10.8)
 
 Solved by rating band (of 72 / 72 / 72 / 71 / 71 / 71 / 71):
 
@@ -32,6 +36,7 @@ Solved by rating band (of 72 / 72 / 72 / 71 / 71 / 71 / 71):
 | teacher gpt-oss-120b, medium effort | 59 | 57 | 47 | 36 | 26 | 21 | 19 |
 | student A: answers only (1.7B) | 63 | 56 | 45 | 32 | 39 | 28 | 21 |
 | student B: teacher explanations (1.7B) | 54 | 47 | 37 | 31 | 39 | 21 | 21 |
+| student A + 200k more puzzles (1.7B) | 67 | 63 | 53 | 43 | 37 | 30 | 26 |
 
 ## How the prompt changes the teacher
 
