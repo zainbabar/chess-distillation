@@ -27,6 +27,7 @@ ckpt/
 # ...except the held-out TEST SET: a rebuild from a newer Lichess download would differ
 !test_set.jsonl
 !fresh_test_set.jsonl
+!fresh_test_set_2.jsonl
 
 
 # Claude Code local state

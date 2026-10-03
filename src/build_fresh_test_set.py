@@ -1,4 +1,5 @@
-"""Build fresh_test_set.jsonl: 500 new puzzles for a one-time evaluation (see reports/fresh_test_protocol.md).
+"""Build fresh_test_set.jsonl (defaults) or another fresh set (--seed, --out): 500 new puzzles for a one-time
+evaluation (see reports/fresh_test_protocol.md, reports/fresh_test_2_protocol.md).
 
 Same recipe as build_test_set.py (same Lichess snapshot, 7 rating bands 800-2200, RatingDeviation <= 100, 72/72/72/71/
 71/71/71), a new seed, and a strict exclusion: a candidate is dropped if its puzzle id, its source game, or any position
@@ -6,6 +7,7 @@ along its solution (piece placement, side to move, castling, en passant; move co
 appears anywhere in this project's files (every pool, training set, test set and output under the repo root and
 results/), not only the training sets.
 """
+import argparse
 import csv
 import json
 import random
@@ -47,6 +49,12 @@ def seen_ids():
 
 
 def main():
+    global OUT_PATH, SEED
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--seed", type=int, default=SEED)
+    ap.add_argument("--out", default=OUT_PATH)
+    a = ap.parse_args()
+    OUT_PATH, SEED = a.out, a.seed
     ids, n_files = seen_ids()
     # Pass 1: positions and games of every puzzle we have ever used; eligible rows per band.
     games, pos = set(), set()
